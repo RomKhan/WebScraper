@@ -32,7 +32,7 @@ class DataWorker:
                     df = pd.read_csv('offers.csv')
                 except:
                     df = pd.DataFrame()
-                df = df.append(pd.Series(data), ignore_index=True)
+                df = pd.concat([df, pd.DataFrame([pd.Series(data)])], ignore_index=True)
                 df.to_csv('offers.csv', mode='w', index=False)
             else:
                 time.sleep(5)

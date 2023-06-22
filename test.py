@@ -37,7 +37,7 @@ driver = uc.Chrome(options=chrome_options)
 # scraper = cloudscraper.create_scraper()
 
 t1 = time.time()
-url = 'https://www.cian.ru/sale/flat/289077159/'
+url = 'https://www.cian.ru/sale/flat/289082576/'
 driver.get(url)
 # time.sleep(300)
 try:

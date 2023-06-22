@@ -40,6 +40,10 @@ class CianScraper(Scraper):
             description = self.parse_description(tree)
             add_dict_info = self.parse_flat_and_house_additional_data(tree)
             image_url_data = ('cian', id, self.parse_photos_urls(tree))
+            if image_url_data == False:
+                image_status = 'Не удалось спарсить'
+            else:
+                image_status = 'Удалось спарсить'
             offer_data = {'id': id,
                           'Цена': price,
                           'Факты о сделке': offer_facts,
@@ -49,7 +53,8 @@ class CianScraper(Scraper):
                           'Адресс': adress,
                           'Название ЖК': residential_complex,
                           'Описание': description,
-                          'Ссылка': link}
+                          'Ссылка': link,
+                          'Парсинг картинок': image_status}
             offer_data.update(object_data_dict)
             offer_data.update(add_dict_info)
             #offer_data.update(house_info_dict)
@@ -137,7 +142,7 @@ class CianScraper(Scraper):
                 images_urls.append(image.get('src'))
         except Exception as e:
             print(e)
-            raise Exception("Ошибка парсинга фото")
+            return False
         return images_urls
 
     def get_link_by_page(self):
