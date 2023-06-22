@@ -18,13 +18,14 @@ import threading
 
 
 class Scraper:
-    def __init__(self, url_components, link_token, pics_folder, image_loader, prev_address = None):
+    def __init__(self, url_components, link_token, pics_folder, image_loader, data_saver, prev_address = None):
         self.url_components = url_components
         self.WINDOW_SIZE = "1920,1080"
         self.link_token = link_token
         self.prev_address = prev_address
         self.pics_folder = pics_folder
         self.image_loader = image_loader
+        self.data_saver = data_saver
         self.links = {}
         self.previous_idx = set()
         self.main_page_load_indicator = ''
@@ -38,6 +39,7 @@ class Scraper:
         future_previous_idx = set()
         for i in range(10):
             if self.is_first_run and i > 1:
+                self.is_first_run = False
                 break
             url = self.get_link_by_page()
             self.run_driver_on_main_page(url, driver)
@@ -55,9 +57,10 @@ class Scraper:
             self.current_page += 1
             if i == 9:
                 print('Я взял обявления с 10 страниц')
-            if len(idx) == 0:
+            if len(idx) != len(set(links.keys())):
                 break
 
+        print(f'Пытаюсь спарсить {len(self.links)} обявлений')
         self.current_page = 1
         self.previous_idx = future_previous_idx
         self.get_offers_data(driver)
@@ -118,9 +121,9 @@ class Scraper:
                 self.links[id] = (link, errors + 1)
             t2 = time.time()
             if t2-t1 < 8:
-                time.sleep(random.randint(max(6-(t2-t1), 0), 5))
+                time.sleep(random.randint(5, 8))
             t2 = time.time()
-            print(t2-t1)
+            print(f'Парсинг обьявления {link} занял {t2-t1} секунд')
 
             #driver.switch_to.new_window('tab')
             #thread = threading.Thread(target=self.save_screenshot, args=(links[i], idx[i], driver))
@@ -154,7 +157,8 @@ class Scraper:
 
     def get_webdriver(self):
         chrome_options = webdriver.ChromeOptions()
-        #chrome_options.add_argument('--proxy-server=%s' % PROXY)
+        # PROXY = "92.255.7.162:8080"
+        # chrome_options.add_argument('--proxy-server=%s' % PROXY)
         chrome_options.add_argument('--headless')
         #chrome_options.add_argument('--no-sandbox')
         #chrome_options.add_argument('--disable-dev-shm-usage')

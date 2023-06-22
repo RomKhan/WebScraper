@@ -12,8 +12,8 @@ from Scraper import Scraper
 
 
 class CianScraper(Scraper):
-    def __init__(self, url, link_token, pics_folder, image_loader, prev_address=None):
-        Scraper.__init__(self, url, link_token, pics_folder, image_loader, prev_address)
+    def __init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address=None):
+        Scraper.__init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address)
         self.offer_load_indicator = "//div[@data-name='PriceInfo']"
         self.main_page_load_indicator = "//div[@data-name='SummaryHeader']"
         self.by_settings = By.XPATH
@@ -33,38 +33,30 @@ class CianScraper(Scraper):
 
     async def parse_offer_page(self, content, link, id):
         tree = html.fromstring(content)
-        offer_data = {}
         try:
             price, offer_facts = self.parse_aside_main_info(tree)
             rooms_count, house_type, total_square, adress, residential_complex = self.parse_main_title(tree)
             object_data_dict = self.parse_object_factors(tree)
             description = self.parse_description(tree)
-            flat_info_dict, house_info_dict = self.parse_flat_and_house_additional_data(tree)
+            add_dict_info = self.parse_flat_and_house_additional_data(tree)
             image_url_data = ('cian', id, self.parse_photos_urls(tree))
             offer_data = {'id': id,
                           'Цена': price,
-                          # 'Условия сделки': transaction_terms,
-                          # 'Ипотека': mortgage,
                           'Факты о сделке': offer_facts,
                           'Число комнат': rooms_count,
                           'Тип жилья': house_type,
                           'Общая площадь': total_square,
-                          # 'Город': city,
-                          # 'Улица': street,
-                          # 'Номер дома': house_id,
                           'Адресс': adress,
                           'Название ЖК': residential_complex,
                           'Описание': description,
                           'Ссылка': link}
             offer_data.update(object_data_dict)
-            offer_data.update(flat_info_dict)
-            offer_data.update(house_info_dict)
+            offer_data.update(add_dict_info)
+            #offer_data.update(house_info_dict)
             self.image_loader.image_to_disk_queue.append(image_url_data)
-            print(image_url_data)
+            self.data_saver.data_to_save_queue.append(offer_data)
         except Exception as e:
             print(e, link)
-
-        print(offer_data)
 
     def parse_aside_main_info(self, tree):
         try:
@@ -127,19 +119,15 @@ class CianScraper(Scraper):
 
     def parse_flat_and_house_additional_data(self, tree):
         try:
-            flat_info, house_info = tree.xpath("//div[@data-name='OfferSummaryInfoGroup']")
-            p_tags_flats = flat_info.xpath(".//p/text()")
-            flat_info_dict = {}
-            for i in range(0, len(p_tags_flats), 2):
-                flat_info_dict[p_tags_flats[i]] = p_tags_flats[i + 1].rstrip('\xa0м')
-            p_tags_house = house_info.xpath(".//p/text()")
-            house_info_dict = {}
-            for i in range(0, len(p_tags_house), 2):
-                house_info_dict[p_tags_house[i]] = p_tags_house[i + 1].rstrip('\xa0м')
+            add_info = [x.xpath('.//p/text()') for x in tree.xpath("//div[@data-name='OfferSummaryInfoGroup']")]
+            add_info = [item for sublist in add_info for item in sublist]
+            add_dict = {}
+            for i in range(0, len(add_info), 2):
+                add_dict[add_info[i]] = add_info[i + 1].rstrip('\xa0м')
         except Exception as e:
             print(e)
             raise Exception("Ошибка парсинга доп инфы о доме или квартиры")
-        return flat_info_dict, house_info_dict
+        return add_dict
 
     def parse_photos_urls(self, tree):
         try:

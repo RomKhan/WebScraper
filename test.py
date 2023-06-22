@@ -29,7 +29,7 @@ chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument('--disable-dev-shm-usage')
 chrome_options.add_argument("--window-size=%s" % "1920,1080")
 chrome_options.page_load_strategy = 'none'
-chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+#chrome_options.add_argument('--blink-settings=imagesEnabled=false')
 #chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 driver = uc.Chrome(options=chrome_options)
 #driver = webdriver.Chrome(options=chrome_options)
@@ -37,7 +37,7 @@ driver = uc.Chrome(options=chrome_options)
 # scraper = cloudscraper.create_scraper()
 
 t1 = time.time()
-url = 'https://www.cian.ru/sale/flat/288994161/'
+url = 'https://www.cian.ru/sale/flat/289077159/'
 driver.get(url)
 # time.sleep(300)
 try:
@@ -74,10 +74,7 @@ else:
     house_type = title[1][:-1]
     total_square = title[2]
 # residential_complex = mainNew.xpath(".//div[@data-name='ParentNew']/a/text()")[0]
-adress_items = mainNew.xpath(".//div[@data-name='AddressContainer']/a/text()")
-city = adress_items[0]
-street = adress_items[3][4:]
-house_id = adress_items[4]
+adress = ', '.join(mainNew.xpath(".//div[@data-name='AddressContainer']/a/text()"))
 
 # блок 3
 objectFactoids = tree.xpath("//div[@data-name='ObjectFactoids']")[0]
@@ -167,9 +164,9 @@ print(f'Цена: {str(price)}\n'
       f'Тип недвижимости: {house_type}\n'
       f'Общая площадь: {total_square}\n'
       # f'ЖК: {residential_complex}\n'
-      f'Город: {city}\n'
-      f'Улица: {street}\n'
-      f'Номер дома: {house_id}\n'
+      f'Адресс: {adress}\n'
+      # f'Улица: {street}\n'
+      # f'Номер дома: {house_id}\n'
       f'Основные данные об обьекте: {object_data_dict}\n'
       # f'Жилая площадь: {living_square}\n'
       # f'Кухонная площадь: {kitchen_square}\n'

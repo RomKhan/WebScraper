@@ -74,10 +74,10 @@ class Reactor(threading.Thread):
 
                 for entry in log_entries:
                     try:
-                        obj_serialized: str = entry.run("message")
+                        obj_serialized: str = entry.get("message")
                         obj = json.loads(obj_serialized)
-                        message = obj.run("message")
-                        method = message.run("method")
+                        message = obj.get("message")
+                        method = message.get("method")
 
                         if "*" in self.handlers:
                             await self.loop.run_in_executor(

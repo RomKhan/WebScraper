@@ -12,13 +12,15 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from AvitoScraper import AvitoScraper
 from CianScraper import CianScraper
+from DataWorker import DataWorker
 from DomClickScraper import DomClickScraper
 from ImageLoader import ImageLoader
 import os
 import re
 import shutil
 
-def parse_cian(urls, appearing_mask, image_loader):
+
+def parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver):
     sort_mask = sorted(range(len(appearing_mask)), key=lambda k: appearing_mask[k])
     finish_times = [0 for x in range(len(appearing_mask))]
     scrapers = []
@@ -28,15 +30,16 @@ def parse_cian(urls, appearing_mask, image_loader):
 
     for i in range(len(urls)):
         url_components = CianScraper.parse_link(urls[i])
-        offer_link_indicator = 'https://www.cian.ru/sale/flat/'
+        offer_link_indicator = 'cian.ru/sale/flat'
         pics_folder = 'cian'
-        scraper = CianScraper(url_components, offer_link_indicator, pics_folder, image_loader)
+        scraper = CianScraper(url_components, offer_link_indicator, pics_folder, image_loader, data_saver)
         scrapers.append(scraper)
 
     while True:
         for i in sort_mask:
             t1 = time.time()
             if t1 - finish_times[i] > (appearing_mask[i] - 5)*60:
+                print(f'Парсю обялвения с города: {city_link_match[i]}')
                 scrapers[i].run()
                 t2 = time.time()
                 finish_times[i] = t2
@@ -63,14 +66,26 @@ def main():
     image_thread = threading.Thread(target=image_loader.load_images_parallel)
     image_thread.start()
 
+    data_saver = DataWorker()
+    data_thread = threading.Thread(target=data_saver.run)
+    data_thread.start()
+
     t1 = time.time()
     url_cian_moscow = 'https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=1&sort=creation_date_desc'
     url_cian_peter = 'https://spb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=2&sort=creation_date_desc'
     url_cian_ekb = 'https://ekb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=4743&sort=creation_date_desc'
     urls = [url_cian_moscow, url_cian_peter, url_cian_ekb]
+    city_link_match = ['Москва', 'Питер', 'Екатеринбург']
     # Раз в сколько минут нужно делать запрос для каждой ссылке.
     appearing_mask = [15, 30, 60]
-    parse_cian(urls, appearing_mask, image_loader)
+    parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver)
+
+    # url = CianScraper.parse_link(url_cian_peter)
+    # if not os.path.exists("cian"):
+    #     os.mkdir('cian')
+    # scraper1 = CianScraper(url, 'cian.ru/sale/flat', 'cian', image_loader)
+    # thread1 = threading.Thread(target=scraper1.run)
+    # thread1.start()
 
 
 
@@ -94,7 +109,9 @@ def main():
     #thread3.join()
     t2 = time.time()
     print(f'work time - {t2 - t1}')
-    image_thread.run = False
+    data_saver.is_run = False
+    data_thread.join()
+    image_loader.is_run = False
     image_thread.join()
     t2 = time.time()
     print(f'work time - {t2 - t1}')

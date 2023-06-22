@@ -9,8 +9,8 @@ from Scraper import Scraper
 
 
 class DomClickScraper(Scraper):
-    def __init__(self, url, link_token, pics_folder, image_loader, prev_address = None):
-        Scraper.__init__(self, url, link_token, pics_folder, image_loader, prev_address)
+    def __init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address = None):
+        Scraper.__init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address)
         self.offer_load_indicator = 'product-page'
         self.main_page_load_indicator = 'content-wrap'
         self.by_settings = By.CLASS_NAME

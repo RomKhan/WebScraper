@@ -9,8 +9,8 @@ from Scraper import Scraper
 
 
 class AvitoScraper(Scraper):
-    def __init__(self, url, link_token, pics_folder, image_loader, prev_address = None):
-        Scraper.__init__(self, url, link_token, pics_folder, image_loader, prev_address)
+    def __init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address = None):
+        Scraper.__init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address)
         self.offer_load_indicator = "span[class^='style-price-value-main']"
         self.main_page_load_indicator = "span[class^='page-title-count']"
         self.by_settings = By.CSS_SELECTOR
