@@ -7,12 +7,12 @@ from time import sleep
 import time
 import os
 import yadisk
+import requests
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--window-size=%s" % '1920 1080')
-chrome_options.page_load_strategy = 'none'
-chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-driver = uc.Chrome(options=chrome_options, user_multi_procs=True)
-
-driver.get('https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=1&sort=creation_date_desc')
-time.sleep(100)
+y = yadisk.YaDisk("ec228561582a46baa7c3f88907c0395d", "46145e37e4cf415d8283490af86b6113")
+y.token = 'y0_AgAAAAANYmzbAAf07QAAAADl13LC72bkYNO7So6osrxeT1dmwOorZhQ'
+if y.exists('test'):
+    y.remove('test')
+time.sleep(2)
+y.mkdir('test')
+y.upload_url('https://spb.cian.ru/sale/flat/286944730/', 'test/page.html')

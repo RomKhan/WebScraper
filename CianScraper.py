@@ -58,7 +58,8 @@ class CianScraper(Scraper):
             offer_data.update(object_data_dict)
             offer_data.update(add_dict_info)
             #offer_data.update(house_info_dict)
-            self.image_loader.image_to_disk_queue.append(image_url_data)
+            if image_url_data[2] != False:
+                self.image_loader.image_to_disk_queue.append(image_url_data)
             self.data_saver.data_to_save_queue.append(offer_data)
         except Exception as e:
             print(e, link)

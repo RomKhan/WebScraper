@@ -19,16 +19,34 @@ class ImageLoader:
         self.is_downloading_current_state = False
         self.disk_folder_name = 'temp'
 
+    def retry_until_success(self, disk_func, *args, **kwargs):
+        count = 0
+        ex = ''
+        while count < 10:
+            try:
+                disk_func(*args, **kwargs)
+                break
+            except Exception as e:
+                ex = e
+                count += 1
+                time.sleep(2)
+
+
+        if count == 10:
+            raise Exception(str(ex))
+
+
+
     def download_current_state(self):
         is_end = -1
         while self.is_run or is_end > 0:
             time.sleep(50)
             self.is_downloading_current_state = True
-            time.sleep(5)
+            time.sleep(1)
 
             if self.disk.exists(f'{self.disk_folder_name}_0'):
-                self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
-                self.disk.rename(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
+                self.retry_until_success(self.disk.download, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
+                self.retry_until_success(self.disk.rename, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
 
                 with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
                     zObject.extractall(path=f'{self.disk_folder_name}_0')
@@ -46,15 +64,12 @@ class ImageLoader:
 
                 shutil.rmtree(f"{self.disk_folder_name}_0")
                 os.remove(f'{self.disk_folder_name}_0.zip')
-                time.sleep(1)
-                self.disk.rename(self.disk_folder_name, f'{self.disk_folder_name}_0')
-                self.disk.remove(f'{self.disk_folder_name}_1', permanently=True)
-                time.sleep(1)
+                self.retry_until_success(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
+                self.retry_until_success(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
             else:
-                self.disk.rename(self.disk_folder_name, f'{self.disk_folder_name}_0')
-                time.sleep(1)
+                self.retry_until_success(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
 
-            self.disk.mkdir(self.disk_folder_name)
+            self.retry_until_success(self.disk.mkdir, self.disk_folder_name)
             time.sleep(1)
             self.is_downloading_current_state = False
 
@@ -96,8 +111,9 @@ class ImageLoader:
             self.disk.remove(f'{self.disk_folder_name}_0')
         if self.disk.exists(f'{self.disk_folder_name}_1'):
             self.disk.remove(f'{self.disk_folder_name}_1')
-        time.sleep(15)
-        self.disk.mkdir(self.disk_folder_name)
+        #time.sleep(15)
+        #self.disk.mkdir(path=self.disk_folder_name)
+        self.retry_until_success(self.disk.mkdir, self.disk_folder_name)
 
         thread1 = threading.Thread(target=self.download_current_state)
         thread2 = threading.Thread(target=self.transform_images)
@@ -108,11 +124,12 @@ class ImageLoader:
             if len(self.image_to_disk_queue) > 0:
                 data = self.image_to_disk_queue.pop(0)
                 self.load_images_to_disk(data)
+            time.sleep(2)
 
         thread1.join()
         thread2.join()
         os.remove(f'{self.disk_folder_name}')
-        self.disk.remove(self.disk_folder_name)
+        self.retry_until_success(self.disk.remove, self.disk_folder_name)
 
     def load_images_to_disk(self, data):
         platform_name, offer_id, images_url = data[0], data[1], data[2]
