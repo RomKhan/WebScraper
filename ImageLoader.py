@@ -53,13 +53,16 @@ class ImageLoader:
                 files = os.listdir(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
 
                 for file in files:
-                    shutil.move(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
-                                f'{self.disk_folder_name}{os.sep}{file}')
-                    name_parts = file.split('_')
-                    platform_name = name_parts[0]
-                    offer_id = name_parts[1]
-                    i = int(name_parts[2].split('.')[0])
-                    self.image_to_transform_queue.append((platform_name, i, offer_id))
+                    try:
+                        shutil.move(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
+                                    f'{self.disk_folder_name}{os.sep}{file}')
+                        name_parts = file.split('_')
+                        platform_name = name_parts[0]
+                        offer_id = name_parts[1]
+                        i = int(name_parts[2].split('.')[0])
+                        self.image_to_transform_queue.append((platform_name, i, offer_id))
+                    except:
+                        continue
                     # self.disk.remove(f'temp/{file}')
 
                 shutil.rmtree(f"{self.disk_folder_name}_0")
@@ -102,7 +105,7 @@ class ImageLoader:
         if os.path.exists(f"{self.disk_folder_name}_1"):
             shutil.rmtree(f"{self.disk_folder_name}_1")
         if os.path.exists(f"{self.disk_folder_name}_0.zip"):
-            os.remove(f"{self.disk_folder_name}_1.zip")
+            os.remove(f"{self.disk_folder_name}_0.zip")
         os.mkdir(f'{self.disk_folder_name}')
 
         if self.disk.exists(self.disk_folder_name):
@@ -137,4 +140,7 @@ class ImageLoader:
             if self.is_downloading_current_state:
                 time.sleep(5)
                 continue
-            self.disk.upload_url(images_url[i], f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+            try:
+                self.disk.upload_url(images_url[i], f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg', n_retries=5, retry_interval=1)
+            except:
+                continue

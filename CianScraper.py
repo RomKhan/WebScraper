@@ -13,15 +13,21 @@ from Scraper import Scraper
 
 class CianScraper(Scraper):
     def __init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address=None):
-        Scraper.__init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address)
+        Scraper.__init__(self,
+                         url,
+                         link_token,
+                         pics_folder,
+                         image_loader,
+                         data_saver,
+                         By.XPATH,
+                         "//div[@data-name='SummaryHeader']",
+                         prev_address)
         self.offer_load_indicator = "//div[@data-name='PriceInfo']"
-        self.main_page_load_indicator = "//div[@data-name='SummaryHeader']"
-        self.by_settings = By.XPATH
 
     def get_offer_data(self, link, id, driver):
         try:
             driver.get(link)
-            WebDriverWait(driver, timeout=10).until(
+            WebDriverWait(driver, timeout=30).until(
                 EC.presence_of_element_located((By.XPATH, self.offer_load_indicator)))
             driver.execute_script("window.stop();")
             asyncio.run(self.parse_offer_page(driver.page_source, link, id))
@@ -146,7 +152,7 @@ class CianScraper(Scraper):
             return False
         return images_urls
 
-    def get_link_by_page(self):
+    def get_desk_link(self):
         if self.current_page < 2:
             return f'{self.url_components[0]}&{self.url_components[1]}'
         return f'{self.url_components[0]}&p={self.current_page}&{self.url_components[1]}'

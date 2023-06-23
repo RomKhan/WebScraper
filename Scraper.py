@@ -3,8 +3,6 @@ import os
 import random
 
 from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 import undetected_chromedriver as uc
@@ -16,21 +14,19 @@ from io import BytesIO
 from lxml import etree
 import threading
 
+from ScraperAbstract import ScraperAbstract
 
-class Scraper:
-    def __init__(self, url_components, link_token, pics_folder, image_loader, data_saver, prev_address = None):
+
+class Scraper(ScraperAbstract):
+    def __init__(self, url_components, link_token, pics_folder, image_loader, data_saver, by_settings, page_load_indicator, prev_address = None):
+        ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver)
         self.url_components = url_components
-        self.WINDOW_SIZE = "1920,1080"
         self.link_token = link_token
         self.prev_address = prev_address
         self.pics_folder = pics_folder
         self.image_loader = image_loader
-        self.data_saver = data_saver
         self.links = {}
         self.previous_idx = set()
-        self.main_page_load_indicator = ''
-        self.by_settings = By.XPATH
-        self.current_page = 1
         self.is_first_run = True
 
     def run(self):
@@ -41,8 +37,8 @@ class Scraper:
             if self.is_first_run and i > 1:
                 self.is_first_run = False
                 break
-            url = self.get_link_by_page()
-            self.run_driver_on_main_page(url, driver)
+            url = self.get_desk_link()
+            self.run_driver_on_page(url, driver)
             soup = self.get_soap(driver.page_source)
             links = self.get_offer_links(soup)
             idx = set(links.keys())
@@ -68,46 +64,29 @@ class Scraper:
         driver.close()
         driver.quit()
 
-    def run_driver_on_main_page(self, url, driver):
-        try:
-            driver.get(url)
-            WebDriverWait(driver, timeout=150).until(
-                EC.presence_of_element_located((self.by_settings, self.main_page_load_indicator)))
-        except Exception as e:
-            print('error here', url)
-
-    def get_link_by_page(self) -> str:
-        pass
-
-    def parse_if_exists(self, tree, query):
-        response = tree.xpath(query)
-        if len(response) > 0:
-            return response
-        return None
-
-    def screenshots_merge(self, sceenshot_1, sceenshot_2, sceenshot_3, name):
-        sceenshot_1 = Image.open(BytesIO(sceenshot_1))
-        sceenshot_2 = Image.open(BytesIO(sceenshot_2))
-        sceenshot_3 = Image.open(BytesIO(sceenshot_3))
-
-        new_im = Image.new('RGB', (sceenshot_1.size[0], sceenshot_1.size[1] * 3), (250, 250, 250))
-        new_im.paste(sceenshot_1, (0, 0))
-        new_im.paste(sceenshot_2, (0, sceenshot_1.size[1]))
-        new_im.paste(sceenshot_3, (0, sceenshot_1.size[1] * 2))
-        new_im.save(f"{self.pics_folder}{os.sep}{name}.png", "PNG")
-
-    def save_screenshot(self, link, id, driver):
-        #driver = self.get_webdriver()
-        driver.get(link)
-        sceenshot_1 = driver.get_screenshot_as_png()
-        driver.execute_script("window.scrollTo(0, 1080)")
-        sceenshot_2 = driver.get_screenshot_as_png()
-        driver.execute_script("window.scrollTo(0, 2160)")
-        sceenshot_3 = driver.get_screenshot_as_png()
-        driver.execute_script("window.scrollTo(0, 0)")
-        self.screenshots_merge(sceenshot_1, sceenshot_2, sceenshot_3, id)
-        #driver.close()
-        #driver.quit()
+    # def screenshots_merge(self, sceenshot_1, sceenshot_2, sceenshot_3, name):
+    #     sceenshot_1 = Image.open(BytesIO(sceenshot_1))
+    #     sceenshot_2 = Image.open(BytesIO(sceenshot_2))
+    #     sceenshot_3 = Image.open(BytesIO(sceenshot_3))
+    #
+    #     new_im = Image.new('RGB', (sceenshot_1.size[0], sceenshot_1.size[1] * 3), (250, 250, 250))
+    #     new_im.paste(sceenshot_1, (0, 0))
+    #     new_im.paste(sceenshot_2, (0, sceenshot_1.size[1]))
+    #     new_im.paste(sceenshot_3, (0, sceenshot_1.size[1] * 2))
+    #     new_im.save(f"{self.pics_folder}{os.sep}{name}.png", "PNG")
+    #
+    # def save_screenshot(self, link, id, driver):
+    #     #driver = self.get_webdriver()
+    #     driver.get(link)
+    #     sceenshot_1 = driver.get_screenshot_as_png()
+    #     driver.execute_script("window.scrollTo(0, 1080)")
+    #     sceenshot_2 = driver.get_screenshot_as_png()
+    #     driver.execute_script("window.scrollTo(0, 2160)")
+    #     sceenshot_3 = driver.get_screenshot_as_png()
+    #     driver.execute_script("window.scrollTo(0, 0)")
+    #     self.screenshots_merge(sceenshot_1, sceenshot_2, sceenshot_3, id)
+    #     #driver.close()
+    #     #driver.quit()
 
     def get_offer_data(self, link, id, driver):
         pass
@@ -155,29 +134,5 @@ class Scraper:
         soup = BeautifulSoup(content, parse_only=SoupStrainer('a'), features="html.parser")
         return soup
 
-    def get_webdriver(self):
-        chrome_options = webdriver.ChromeOptions()
-        # PROXY = "92.255.7.162:8080"
-        # chrome_options.add_argument('--proxy-server=%s' % PROXY)
-        chrome_options.add_argument('--headless')
-        #chrome_options.add_argument('--no-sandbox')
-        #chrome_options.add_argument('--disable-dev-shm-usage')
-
-        #chrome_options.add_argument("enable-automation")
-        #chrome_options.add_argument("--disable-dev-shm-usage")
-        #chrome_options.add_argument("--disable-browser-side-navigation")
-        #chrome_options.add_argument("--disable-gpu")
-
-        chrome_options.add_argument("--window-size=%s" % self.WINDOW_SIZE)
-        chrome_options.page_load_strategy = 'none'
-        chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-        driver = uc.Chrome(options=chrome_options, user_multi_procs=True)
-        #driver = webdriver.Chrome(options=chrome_options)
-        return driver
-
     async def parse_offer_page(self, content, link, id):
-        pass
-
-    @staticmethod
-    def parse_link(url):
         pass

@@ -40,7 +40,7 @@ class AvitoScraper(Scraper):
     #     except Exception as e:
     #         print('error here', self.url)
 
-    def get_link_by_page(self):
+    def get_desk_link(self):
         pass
 
     @staticmethod
