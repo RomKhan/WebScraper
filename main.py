@@ -33,7 +33,7 @@ def parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver):
         url_components = CianScraper.parse_link(urls[i])
         offer_link_indicator = 'cian.ru/sale/flat'
         pics_folder = 'cian'
-        scraper = CianScraper(url_components, offer_link_indicator, pics_folder, image_loader, data_saver)
+        scraper = CianScraper(url_components, offer_link_indicator, image_loader, data_saver, 'циан', city_link_match[i], 'Продажа')
         scrapers.append(scraper)
 
     while True:
@@ -63,34 +63,34 @@ def main():
     url_domclick = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&sort=published&sort_dir=desc&offset=0'
     url_avito = 'https://www.avito.ru/moskva/kvartiry/prodam-ASgBAgICAUSSA8YQ?s=104'
 
-    # image_loader = ImageLoader(disk=disk)
-    # image_thread = threading.Thread(target=image_loader.load_images_parallel)
-    # image_thread.start()
+    image_loader = ImageLoader(disk=disk)
+    image_thread = threading.Thread(target=image_loader.load_images_parallel)
+    image_thread.start()
 
     data_saver = DataWorker()
-    data_thread = threading.Thread(target=data_saver.run)
+    data_thread = threading.Thread(target=data_saver.run_db)
     data_thread.start()
 
     t1 = time.time()
     url_cian_moscow = 'https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=1&sort=creation_date_desc'
     url_cian_peter = 'https://spb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=2&sort=creation_date_desc'
     url_cian_ekb = 'https://ekb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=4743&sort=creation_date_desc'
-    # urls = [url_cian_moscow, url_cian_peter, url_cian_ekb]
-    # city_link_match = ['Москва', 'Питер', 'Екатеринбург']
-    # # Раз в сколько минут нужно делать запрос для каждой ссылке.
-    # appearing_mask = [15, 30, 60]
-    # parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver)
+    urls = [url_cian_moscow, url_cian_peter, url_cian_ekb]
+    city_link_match = ['Москва', 'Питер', 'Екатеринбург']
+    # Раз в сколько минут нужно делать запрос для каждой ссылке.
+    appearing_mask = [15, 30, 60]
+    parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver)
 
-    url_cian_peter = 'https://spb.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=6000000&minprice=5000000&offer_type=flat&p=2&region=2&sort=creation_date_desc'
-    url = CianScrapeAll.parse_link(url_cian_peter)
-    if not os.path.exists("cian"):
-        os.mkdir('cian')
-    scraper = CianScrapeAll(url, data_saver)
-    while not scraper.is_end:
-        scraper.iter()
-    t2 = time.time()
-    print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
-          f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
+    # url_cian_peter = 'https://spb.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=6000000&minprice=5000000&offer_type=flat&p=2&region=2&sort=creation_date_desc'
+    # url = CianScrapeAll.parse_link(url_cian_peter)
+    # if not os.path.exists("cian"):
+    #     os.mkdir('cian')
+    # scraper = CianScrapeAll(url, data_saver, 'циан', 'Москва', 'Продажа')
+    # while not scraper.is_end:
+    #     scraper.iter()
+    # t2 = time.time()
+    # print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
+    #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
 
 

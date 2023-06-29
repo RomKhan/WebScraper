@@ -10,11 +10,11 @@ from ScraperAbstract import ScraperAbstract
 
 
 class ScrapeAll(ScraperAbstract):
-    def __init__(self, by_settings, page_load_indicator, data_saver, url_components, min_offers, max_offers, offers_per_page):
-        ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver, 10)
+    def __init__(self, by_settings, page_load_indicator, data_saver, url_components, min_offers, max_offers, offers_per_page, website_name, city, listing_type):
+        ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver, website_name, city, listing_type, 10)
         self.url_components = url_components
         self.prev_price = 0
-        self.step = 1000000
+        self.step = 3200000
         self.min_offers = min_offers
         self.max_offers = max_offers
         self.offers_per_page = offers_per_page
@@ -52,7 +52,7 @@ class ScrapeAll(ScraperAbstract):
         self.step = 1000000
 
     def iter(self):
-        self.current_page = 0
+        self.current_page = 1
         driver = self.get_webdriver()
         offers_count = self.set_step(driver)
         if self.is_end:
@@ -67,7 +67,7 @@ class ScrapeAll(ScraperAbstract):
         while offers_count > 0:
             t1 = time.time()
             url = self.get_desk_link()
-            print(f'Парсю {url}')
+            print(f'Parse {url}')
             self.run_driver_on_page(url, driver)
             self.count_of_requests += 1
             self.parse_page(url, content=driver.page_source)
@@ -77,12 +77,14 @@ class ScrapeAll(ScraperAbstract):
             if t2-t1 < 8:
                 time.sleep(random.randint(5, 8))
             t2 = time.time()
-            print(f'Спарсил {self.count_of_parsed},'
-                  f'затратил {t2 - t1} секунд,'
-                  f'отпрпавил {self.count_of_requests} запросов,'
-                  f'{self.count_of_corrupted} обявлений спарсить не удалось')
+            print(f'Parsed {self.count_of_parsed},'
+                  f'taken {t2 - t1} seconds,'
+                  f'send {self.count_of_requests} requests,'
+                  f'Can\'t parse {self.count_of_corrupted} offers')
 
         self.prev_price += self.step
+        driver.close()
+        driver.quit()
 
     def parse_page(self, link, content):
         pass

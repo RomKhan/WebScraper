@@ -18,12 +18,11 @@ from ScraperAbstract import ScraperAbstract
 
 
 class Scraper(ScraperAbstract):
-    def __init__(self, url_components, link_token, pics_folder, image_loader, data_saver, by_settings, page_load_indicator, prev_address = None):
-        ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver)
+    def __init__(self, url_components, link_token, image_loader, data_saver, by_settings, page_load_indicator, website_name, city, listing_type, prev_address = None):
+        ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver, website_name, city, listing_type)
         self.url_components = url_components
         self.link_token = link_token
         self.prev_address = prev_address
-        self.pics_folder = pics_folder
         self.image_loader = image_loader
         self.links = {}
         self.previous_idx = set()

@@ -14,28 +14,52 @@
 # print(response)
 import time
 
+import psycopg2 as psycopg2
+
 import undetected_chromedriver as uc
 from selenium.webdriver.chrome.options import ChromiumOptions
 from selenium import webdriver
 from lxml import html
 
 
-chrome_options = webdriver.ChromeOptions()
+# chrome_options = webdriver.ChromeOptions()
 #chrome_options.add_argument('--proxy-server=%s' % PROXY)
 #chrome_options.add_argument('--headless')
 # chrome_options.add_argument('--no-sandbox')
 # chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_options.add_argument("--window-size=%s" % "1920,1080")
-chrome_options.page_load_strategy = 'none'
-chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-driver = uc.Chrome(options=chrome_options)
-url = 'https://www.google.ru/search?q=https://spb.cian.ru/sale/flat/286944730/'
-driver.get(url)
-time.sleep(1)
-content = driver.page_source
-tree = html.fromstring(content)
-links = tree.xpath("//a")
-for i in range(len(links)):
-    url = links[i].get('href')
-    print(url)
-time.sleep(5)
+# chrome_options.add_argument("--window-size=%s" % "1920,1080")
+# chrome_options.page_load_strategy = 'none'
+# chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+# driver = uc.Chrome(options=chrome_options)
+# url = 'https://www.google.ru/search?q=https://spb.cian.ru/sale/flat/286944730/'
+# driver.get(url)
+# time.sleep(1)
+# content = driver.page_source
+# tree = html.fromstring(content)
+# links = tree.xpath("//a")
+# for i in range(len(links)):
+#     url = links[i].get('href')
+#     print(url)
+# time.sleep(5)
+
+connection = psycopg2.connect(
+        user="postgres",
+        password="1242241к",
+        host="localhost",
+        port="5432",
+        database="realestatedb"
+    )
+
+city = 'Москва'
+cursor = connection.cursor()
+
+table_name = 'Sellers'
+keys = ['seller_name', 'seller_type']
+values = ['ТРЕНД', 'Агенство']
+insert_query = f'INSERT INTO {table_name} ({", ".join(keys)}) VALUES ({", ".join(["%s"] * len(keys))})'
+
+record_to_insert = tuple(values)
+cursor.execute(insert_query, record_to_insert)
+connection.commit()
+cursor.close()
+# connection.commit()

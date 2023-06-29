@@ -12,15 +12,17 @@ from Scraper import Scraper
 
 
 class CianScraper(Scraper):
-    def __init__(self, url, link_token, pics_folder, image_loader, data_saver, prev_address=None):
+    def __init__(self, url, link_token, image_loader, data_saver, website_name, city, listing_type, prev_address=None):
         Scraper.__init__(self,
                          url,
                          link_token,
-                         pics_folder,
                          image_loader,
                          data_saver,
                          By.XPATH,
                          "//div[@data-name='SummaryHeader']",
+                         website_name,
+                         city,
+                         listing_type,
                          prev_address)
         self.offer_load_indicator = "//div[@data-name='PriceInfo']"
 
@@ -38,18 +40,19 @@ class CianScraper(Scraper):
         return False
 
     async def parse_offer_page(self, content, link, id):
-        tree = html.fromstring(content)
         try:
+            tree = html.fromstring(content)
             price, offer_facts = self.parse_aside_main_info(tree)
             rooms_count, house_type, total_square, adress, residential_complex = self.parse_main_title(tree)
+            total_square = total_square
             object_data_dict = self.parse_object_factors(tree)
             description = self.parse_description(tree)
             add_dict_info = self.parse_flat_and_house_additional_data(tree)
             image_url_data = ('cian', id, self.parse_photos_urls(tree))
             if image_url_data == False:
-                image_status = 'Не удалось спарсить'
+                image_path = False
             else:
-                image_status = 'Удалось спарсить'
+                image_path = f'cian{os.sep}{id}'
             offer_data = {'id': id,
                           'Цена': price,
                           'Факты о сделке': offer_facts,
@@ -60,20 +63,21 @@ class CianScraper(Scraper):
                           'Название ЖК': residential_complex,
                           'Описание': description,
                           'Ссылка': link,
-                          'Парсинг картинок': image_status}
+                          'Путь к картинкам': image_path
+                          }
             offer_data.update(object_data_dict)
             offer_data.update(add_dict_info)
             #offer_data.update(house_info_dict)
             if image_url_data[2] != False:
                 self.image_loader.image_to_disk_queue.append(image_url_data)
-            self.data_saver.data_to_save_queue.append(offer_data)
+            self.to_database(offer_data)
         except Exception as e:
             print(e, link)
 
     def parse_aside_main_info(self, tree):
         try:
             asideMainInfo = tree.xpath("//div[@data-name='AsideMainInfo']")[0]
-            price = unidecode.unidecode(asideMainInfo.xpath(".//div[@data-name='PriceInfo']/div/span")[0].text[:-2])
+            price = ''.join(unidecode.unidecode(asideMainInfo.xpath(".//div[@data-name='PriceInfo']/div/span")[0].text[:-2]).split())
             offerFacts = asideMainInfo.xpath(".//div[@data-name='OfferFactItem']/p/text()")
             offerFacts_dict = {}
             for i in range(0, len(offerFacts), 2):
@@ -136,6 +140,54 @@ class CianScraper(Scraper):
             add_dict = {}
             for i in range(0, len(add_info), 2):
                 add_dict[add_info[i]] = add_info[i + 1].rstrip('\xa0м')
+
+            if 'Количество лифтов' in add_dict.keys():
+                elevators = add_dict.pop('Количество лифтов').split(',')
+                if len(elevators) == 2:
+                    add_dict['Пассажирский лифт'] = elevators[0].split()[0]
+                    add_dict['Грузовой лифт'] = elevators[1].split()[0]
+                elif len(elevators) == 1:
+                    components = elevators[0].split()
+                    if 'пассаж' in components[1]:
+                        add_dict['Пассажирский лифт'] = components[0]
+                    elif 'груз' in components[1]:
+                        add_dict['Грузовой лифт'] = components[0]
+                    else:
+                        print('Аномальный  тип лифта', elevators)
+                else:
+                    print('Аномальное количество типов лифтов', elevators)
+
+            if 'Санузел' in add_dict.keys():
+                bathrooms = add_dict.pop('Санузел').split(',')
+                if len(bathrooms) == 2:
+                    add_dict['Совмещенный санузел'] = bathrooms[0].split()[0]
+                    add_dict['Раздельный санузел'] = bathrooms[1].split()[0]
+                elif len(bathrooms) == 1:
+                    components = bathrooms[0].split()
+                    if 'раздел' in components[1]:
+                        add_dict['Раздельный санузел'] = components[0]
+                    elif 'совмещ' in components[1]:
+                        add_dict['Совмещенный санузел'] = components[0]
+                    else:
+                        print('Аномальный  тип туалета', bathrooms)
+                else:
+                    print('Аномальное количество типов туалетов', bathrooms)
+
+            if 'Балкон/лоджия' in add_dict.keys():
+                louge_and_balcony = add_dict.pop('Балкон/лоджия').split(',')
+                if len(louge_and_balcony) == 2:
+                    add_dict['Лоджия'] = louge_and_balcony[0].split()[0]
+                    add_dict['Балкон'] = louge_and_balcony[1].split()[0]
+                elif len(louge_and_balcony) == 1:
+                    components = louge_and_balcony[0].split()
+                    if 'лод' in components[1]:
+                        add_dict['Лоджия'] = components[0]
+                    elif 'балк' in components[1]:
+                        add_dict['Балкон'] = components[0]
+                    else:
+                        print('Аномальный  тип баллкона', louge_and_balcony)
+                else:
+                    print('Аномальное количество типов балконов', louge_and_balcony)
         except Exception as e:
             print(e)
             raise Exception("Ошибка парсинга доп инфы о доме или квартиры")

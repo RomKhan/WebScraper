@@ -7,8 +7,8 @@ from lxml import html
 from ScrapeAll import ScrapeAll
 
 class CianScrapeAll(ScrapeAll):
-    def __init__(self, url_components, data_saver):
-        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 1000, 1500, 28)
+    def __init__(self, url_components, data_saver, website_name, city, listing_type):
+        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 1000, 1500, 28, website_name, city, listing_type)
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)
@@ -21,7 +21,7 @@ class CianScrapeAll(ScrapeAll):
                     corrupt_offers += 1
                     self.count_of_corrupted += 1
                     continue
-                self.data_saver.data_to_save_queue.append(data)
+                self.to_database(data)
             self.count_of_parsed += len(offers) - corrupt_offers
         except Exception as e:
             print(e, link)
@@ -46,14 +46,22 @@ class CianScrapeAll(ScrapeAll):
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(link_area[0])
             adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()"))
-            price = unidecode.unidecode(link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0])
-            description = link_area[0].xpath('.//div[@data-name="Description"]/p/text()')[0]
+            price = ''.join(unidecode.unidecode(link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0][:-2]).split())
+            description_block = link_area[0].xpath('.//div[@data-name="Description"]/p/text()')
+            if len(description_block) > 0:
+                description = description_block[0]
             link_area[1] = link_area[1].xpath('.//div[@data-name="BrandingLevelWrapper"]')[0]
-            trader_data = link_area[1].xpath('.//div[contains(@class, "content")]')[0].xpath('.//span/text()')
+            trader_container = link_area[1].xpath('.//div[contains(@class, "content")]')[0]
+            trader_data = trader_container.xpath('.//span/text()')
             if len(trader_data) == 1:
                 name = trader_data[0]
             else:
                 trader_type, name = trader_data[:2]
+            # trader_id = trader_container.xpath('.//a')
+            # if len(trader_id) > 0:
+            #     trader_id = trader_id[0].get('href').split('/')[-1]
+            # else:
+            #     trader_id = name.split()[1]
         except Exception as e:
             print(e)
             print('не получилось полностью спарсить обьявление')
@@ -79,10 +87,10 @@ class CianScrapeAll(ScrapeAll):
         title = link_area.xpath('.//span[@data-mark="OfferTitle"]/span/text()')[0].split()
         if title[-1] != 'этаж':
             title = link_area.xpath('.//span[@data-mark="OfferSubtitle"]/text()')
-        if title[-1] != 'этаж':
+        if len(title) == 0 or title[-1] != 'этаж':
             return None, None, None, None, None
         if len(title) < 6:
-            rooms_count = 0
+            rooms_count = '0'
             house_type = title[0][:-1]
             total_square = title[1]
             flat_flour, max_flours = title[3].split('/')
