@@ -10,7 +10,7 @@ from ScraperAbstract import ScraperAbstract
 
 
 class ScrapeAll(ScraperAbstract):
-    def __init__(self, by_settings, page_load_indicator, data_saver, url_components, min_offers, max_offers, offers_per_page, website_name, city, listing_type):
+    def __init__(self, by_settings, page_load_indicator, data_saver, url_components, min_offers, max_offers, offers_per_page, website_name, city, listing_type, optimal_timeout):
         ScraperAbstract.__init__(self, by_settings, page_load_indicator, data_saver, website_name, city, listing_type, 10)
         self.url_components = url_components
         self.prev_price = 0
@@ -24,6 +24,8 @@ class ScrapeAll(ScraperAbstract):
         self.count_of_parsed = 0
         self.count_of_requests = 0
         self.count_of_corrupted = 0
+        self.prev_count_of_lisitngs = -1
+        self.optimal_timeout = optimal_timeout
 
     def set_step(self, driver):
         issuie_count = 0
@@ -33,12 +35,12 @@ class ScrapeAll(ScraperAbstract):
             self.run_driver_on_page(url, driver)
             self.count_of_requests += 1
             offers_count = self.get_count_of_offers(driver.page_source)
-            if offers_count == -1:
+            if offers_count == -1 or self.prev_count_of_lisitngs == offers_count:
                 if issuie_count > 5:
                     break
                 else:
                     issuie_count += 1
-                    time.sleep(5)
+                    time.sleep(self.optimal_timeout-3)
                     continue
             if offers_count == 0 and self.last_offers_count != 0:
                 self.is_end = True
@@ -51,7 +53,7 @@ class ScrapeAll(ScraperAbstract):
                 self.step = round(self.step - int(self.step/2), -3)
             t2 = time.time()
             if t2-t1 < 8:
-                time.sleep(random.randint(5, 8))
+                time.sleep(random.randint(self.optimal_timeout-3, self.optimal_timeout))
 
         return offers_count
 
@@ -63,11 +65,12 @@ class ScrapeAll(ScraperAbstract):
         self.current_page = 1
         driver = self.get_webdriver()
         offers_count = self.set_step(driver)
+        self.prev_count_of_lisitngs = offers_count
         if self.is_end:
             return
 
         url = self.get_desk_link()
-        self.parse_page(url, content=driver.page_source)
+        self.previous_idx = self.parse_page(url, content=driver.page_source)
         self.last_offers_count = offers_count
         self.current_page += 1
         offers_count -= self.offers_per_page
@@ -77,24 +80,19 @@ class ScrapeAll(ScraperAbstract):
             url = self.get_desk_link()
             print(f'Parse {url}')
 
-            is_correct = False
-            issue_count = 5
-            while not is_correct or issue_count > 5:
-                is_correct = self.run_driver_on_page(url, driver)
-                issue_count -= 1
-                self.count_of_requests += 1
-
+            self.run_driver_on_page(url, driver)
+            self.count_of_requests += 1
             idx = self.parse_page(url, content=driver.page_source)
             self.current_page += 1
             offers_count -= self.offers_per_page
             idx_diff = len(idx - self.previous_idx)
-            self.previous_idx = idx
-            if not is_correct:
+
+            if self.current_page < 3:
                 idx_diff = 1
 
             t2 = time.time()
-            if t2-t1 < 8:
-                time.sleep(random.randint(5, 8))
+            if t2-t1 < self.optimal_timeout:
+                time.sleep(random.randint(self.optimal_timeout-3, self.optimal_timeout))
             t2 = time.time()
             print(f'Parsed {self.count_of_parsed},'
                   f'taken {t2 - t1} seconds,'

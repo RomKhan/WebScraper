@@ -9,7 +9,7 @@ from ScrapeAll import ScrapeAll
 
 class DomClickScrapeAll(ScrapeAll):
     def __init__(self, url_components, data_saver, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.CLASS_NAME, 'app main-content', data_saver, url_components, 1500, 2000, 20, website_name, city, listing_type)
+        ScrapeAll.__init__(self, By.CLASS_NAME, 'app main-content', data_saver, url_components, 1500, 2000, 20, website_name, city, listing_type, 8)
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)
@@ -19,7 +19,7 @@ class DomClickScrapeAll(ScrapeAll):
             corrupt_offers = 0
             for offer in offers:
                 data, id = self.parse_offer(offer)
-                if data == False:
+                if not data:
                     corrupt_offers += 1
                     self.count_of_corrupted += 1
                     continue
@@ -117,8 +117,8 @@ class DomClickScrapeAll(ScrapeAll):
         elif self.current_page < 2:
             return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset=0'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&offset={self.current_page * 20}'
-        return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset={self.current_page * 20}'
+            return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&offset={(self.current_page - 1) * 20}'
+        return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset={(self.current_page - 1)* 20}'
 
     @staticmethod
     def parse_link(url):

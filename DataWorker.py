@@ -139,6 +139,8 @@ class DataWorker:
         for key in list(new_record.keys()):
             if record[key] == new_record[key] or new_record[key] == None or key in self.not_changed_keys:
                 new_record.pop(key)
+                if history_keys is not None and record[key] == None and key in history_keys:
+                    history_keys.remove(key)
 
         keys = list(new_record.keys())
         values = list(new_record.values())
@@ -155,7 +157,7 @@ class DataWorker:
             self.db_connection.commit()
             if history_keys is not None and len(history_keys) > 0:
                 values = [new_record[key] for key in history_keys]
-                history_keys.append('change_data')
+                history_keys.append('change_timestamp')
                 history_keys.append(history_id)
                 values.append(datetime.date.today())
                 values.append(id)
