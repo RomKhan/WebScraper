@@ -144,6 +144,7 @@ class DataWorker:
         values = list(new_record.values())
         values.append(id)
         if history_keys is not None:
+            history_id = history_keys[0]
             history_keys = list(set(keys) & set(history_keys))
 
         if len(new_record) > 0:
@@ -155,7 +156,9 @@ class DataWorker:
             if history_keys is not None and len(history_keys) > 0:
                 values = [new_record[key] for key in history_keys]
                 history_keys.append('change_data')
+                history_keys.append(history_id)
                 values.append(datetime.date.today())
+                values.append(id)
                 insert_query = f'INSERT INTO {table_name}_Changes ({", ".join(history_keys)}) VALUES ({", ".join(["%s"] * len(history_keys))})'
                 data = tuple(values)
                 cursor.execute(insert_query, data)
@@ -203,7 +206,7 @@ class DataWorker:
             'house_status': data['Дом'],
             'residential_complex_name': data['Название ЖК'],
         }
-        history_keys = ['end_build_year', 'house_status', 'is_derelicted']
+        history_keys = ['addres','end_build_year', 'house_status', 'is_derelicted']
         return self.update_or_past(record, 'addres', 'House_Features', history_keys)
 
     def update_or_past_listings_static_features(self, data):
@@ -238,7 +241,7 @@ class DataWorker:
             'description': data['Описание'],
             'price': data['Цена'],
         }
-        history_keys = ['seller_name', 'description', 'price']
+        history_keys = ['listing_id', 'seller_name', 'description', 'price']
         return self.update_or_past(record, 'listing_id', 'Listings', history_keys)
 
     def update_or_past_listings_sale(self, data):
@@ -247,14 +250,14 @@ class DataWorker:
             'conditions': data['Условия сделки'],
             'is_mortgage_available': data['Ипотека'],
         }
-        history_keys = ['conditions', 'is_mortgage_available']
+        history_keys = ['listings_sale_id', 'conditions', 'is_mortgage_available']
         return self.update_or_past(record, 'listings_sale_id', 'Listings_Sale', history_keys)
 
     def update_or_past_listings_rent(self, data):
         record = {
             'listings_rent_id': data['id']
         }
-        history_keys = []
+        history_keys = ['listings_rent_id']
         return self.update_or_past(record, 'listings_rent_id', 'Listings_Rent', history_keys)
 
     def update_or_past_websites_listings_map(self, data):
@@ -317,7 +320,6 @@ class DataWorker:
                 data[key] = None
 
     def type_convert(self, data):
-        data['id'] = int(data['id'])
         #data['Цена'] = int(data['Цена'])
         data['Цена'] = DataWorker.type_convert_if_possible(data, 'Цена', int)
         data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)

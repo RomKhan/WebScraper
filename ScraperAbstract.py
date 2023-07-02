@@ -23,6 +23,7 @@ class ScraperAbstract:
         self.website_db_id = self.data_saver.get_website_id(website_name)
         self.city_db_id = self.data_saver.get_city_id(city)
         self.listing_type_db_id = self.data_saver.get_listing_type_id(listing_type)
+        self.previous_idx = set()
 
     def run_driver_on_page(self, url, driver):
         try:
@@ -30,7 +31,9 @@ class ScraperAbstract:
             WebDriverWait(driver, timeout=self.page_load_timeout).until(
                 EC.presence_of_element_located((self.by_settings, self.page_load_indicator)))
         except Exception as e:
-            print('error here', url)
+            print('i can\'t fully load this page', url)
+            return False
+        return True
 
     def parse_if_exists(self, tree, query):
         response = tree.xpath(query)

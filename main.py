@@ -4,6 +4,7 @@ import threading
 import yadisk
 from selenium import webdriver
 from bs4 import BeautifulSoup, SoupStrainer
+
 import undetected_chromedriver as uc
 import time
 from selenium.webdriver.common.by import By
@@ -14,11 +15,14 @@ from AvitoScraper import AvitoScraper
 from CianScrapeAll import CianScrapeAll
 from CianScraper import CianScraper
 from DataWorker import DataWorker
+from DomClickScrapeAll import DomClickScrapeAll
 from DomClickScraper import DomClickScraper
 from ImageLoader import ImageLoader
 import os
 import re
 import shutil
+
+from ScrapeAll import ScrapeAll
 
 
 def parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver):
@@ -48,6 +52,16 @@ def parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver):
                 time.sleep(wait)
         time.sleep(random.randint(appearing_mask[sort_mask[0]]-5, appearing_mask[sort_mask[0]]+5) * 60)
 
+def parse_all(scraper_type, link, data_saver, city, type, website_name):
+    t1 = time.time()
+    url = scraper_type.parse_link(link)
+    scraper = scraper_type(url, data_saver, website_name, city, type)
+    while not scraper.is_end:
+        scraper.iter()
+    t2 = time.time()
+    print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
+          f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
+
 
 def main():
     if os.path.exists("domclick"):
@@ -72,16 +86,17 @@ def main():
     data_thread.start()
 
     t1 = time.time()
-    url_cian_moscow = 'https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=1&sort=creation_date_desc'
-    url_cian_peter = 'https://spb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=2&sort=creation_date_desc'
-    url_cian_ekb = 'https://ekb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=4743&sort=creation_date_desc'
-    urls = [url_cian_moscow, url_cian_peter, url_cian_ekb]
-    city_link_match = ['Москва', 'Питер', 'Екатеринбург']
-    # Раз в сколько минут нужно делать запрос для каждой ссылке.
-    appearing_mask = [15, 30, 60]
-    parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver)
+    #url_cian_moscow = 'https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=1&sort=creation_date_desc'
+    #url_cian_peter = 'https://spb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=2&sort=creation_date_desc'
+    #url_cian_ekb = 'https://ekb.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&p=2&region=4743&sort=creation_date_desc'
+    # urls = [url_cian_moscow, url_cian_peter, url_cian_ekb]
+    # city_link_match = ['Москва', 'Питер', 'Екатеринбург']
+    # # Раз в сколько минут нужно делать запрос для каждой ссылке.
+    # appearing_mask = [15, 30, 60]
+    # parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver)
 
     # url_cian_peter = 'https://spb.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=6000000&minprice=5000000&offer_type=flat&p=2&region=2&sort=creation_date_desc'
+    # url_cian_moscow = 'https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=creation_date_desc'
     # url = CianScrapeAll.parse_link(url_cian_peter)
     # if not os.path.exists("cian"):
     #     os.mkdir('cian')
@@ -92,6 +107,29 @@ def main():
     # print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
     #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
+
+    # url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=10000000&sort=published&sort_dir=desc&sale_price__gte=100000&offset=0'
+    # url = DomClickScrapeAll.parse_link(url_domclick_moscow)
+    # if not os.path.exists("domclick"):
+    #     os.mkdir('domclick')
+    # scraper = DomClickScrapeAll(url, data_saver, 'Домклик', 'Москва', 'Продажа')
+    # while not scraper.is_end:
+    #     scraper.iter()
+    # t2 = time.time()
+    # print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
+    #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
+
+    # url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=10000000&sort=published&sort_dir=desc&sale_price__gte=100000&offset=0'
+    # thread1 = threading.Thread(target=parse_all, args=(
+    #     DomClickScrapeAll, url_domclick_moscow, data_saver, 'Москва', 'Продажа', 'домклик'))
+    # thread1.start()
+    # time.sleep(5)
+
+    url_cian_moscow = 'https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=creation_date_desc'
+    thread2 = threading.Thread(target=parse_all, args=(
+        CianScrapeAll, url_cian_moscow, data_saver, 'Москва', 'Продажа', 'циан'))
+    thread2.start()
+    time.sleep(5)
 
 
 
@@ -109,8 +147,8 @@ def main():
     # thread3 = threading.Thread(target=scraper3.run)
     # #thread3.start()
 
-    #thread1.join()
-    # thread2.join()
+    # thread1.join()
+    thread2.join()
     #thread3.join()
     t2 = time.time()
     print(f'work time - {t2 - t1}')

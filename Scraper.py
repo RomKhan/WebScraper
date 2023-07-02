@@ -25,7 +25,6 @@ class Scraper(ScraperAbstract):
         self.prev_address = prev_address
         self.image_loader = image_loader
         self.links = {}
-        self.previous_idx = set()
         self.is_first_run = True
 
     def run(self):

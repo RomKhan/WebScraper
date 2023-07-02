@@ -12,19 +12,23 @@ class CianScrapeAll(ScrapeAll):
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)
+        idx = set()
         try:
             offers = tree.xpath('//article[@data-name="CardComponent"]')
             corrupt_offers = 0
             for offer in offers:
-                data = self.parse_offer(offer)
+                data, id = self.parse_offer(offer)
                 if data == False:
                     corrupt_offers += 1
                     self.count_of_corrupted += 1
                     continue
+                idx.add(id)
                 self.to_database(data)
             self.count_of_parsed += len(offers) - corrupt_offers
         except Exception as e:
             print(e, link)
+            return None
+        return idx
 
     def parse_offer(self, offer):
         link_area = offer.xpath('.//div[@data-name="LinkArea"]')
@@ -32,7 +36,7 @@ class CianScrapeAll(ScrapeAll):
             link = link_area[0].xpath('.//a')[0].get('href')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
-            return False
+            return False, None
         price = None
         rooms_count = None
         house_type = None
@@ -45,7 +49,7 @@ class CianScrapeAll(ScrapeAll):
         max_flours = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(link_area[0])
-            adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()"))
+            adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()")).replace('\'', '"')
             price = ''.join(unidecode.unidecode(link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0][:-2]).split())
             description_block = link_area[0].xpath('.//div[@data-name="Description"]/p/text()')
             if len(description_block) > 0:
@@ -79,7 +83,7 @@ class CianScrapeAll(ScrapeAll):
                       'Название продаца': name,
                       'Этаж квартиры': flat_flour,
                       'Этажей в доме': max_flours}
-        return offer_data
+        return offer_data, id
 
 
 

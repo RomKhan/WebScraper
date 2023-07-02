@@ -100,7 +100,7 @@ class CianScraper(Scraper):
                 rooms_count = title[0][0]
                 house_type = title[1][:-1]
                 total_square = title[2]
-            adress = ', '.join(mainNew.xpath(".//div[@data-name='AddressContainer']/a/text()"))
+            adress = ', '.join(mainNew.xpath(".//div[@data-name='AddressContainer']/a/text()")).replace('\'', '"')
             # city = adress_items[0]
             # street = adress_items[3]
             # house_id = adress_items[4]
