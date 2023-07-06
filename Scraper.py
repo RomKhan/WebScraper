@@ -59,8 +59,7 @@ class Scraper(ScraperAbstract):
         self.previous_idx = future_previous_idx
         self.get_offers_data(driver)
 
-        driver.close()
-        driver.quit()
+        self.delete_webdriver(driver)
 
     # def screenshots_merge(self, sceenshot_1, sceenshot_2, sceenshot_3, name):
     #     sceenshot_1 = Image.open(BytesIO(sceenshot_1))

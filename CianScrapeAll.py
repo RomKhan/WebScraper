@@ -8,7 +8,7 @@ from ScrapeAll import ScrapeAll
 
 class CianScrapeAll(ScrapeAll):
     def __init__(self, url_components, data_saver, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 1000, 1500, 28, website_name, city, listing_type, 8)
+        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 700, 1500, 28, website_name, city, listing_type, 8)
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)
@@ -34,6 +34,7 @@ class CianScrapeAll(ScrapeAll):
         link_area = offer.xpath('.//div[@data-name="LinkArea"]')
         try:
             link = link_area[0].xpath('.//a')[0].get('href')
+            adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()")).replace('\'', '"')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None
@@ -41,7 +42,6 @@ class CianScrapeAll(ScrapeAll):
         rooms_count = None
         house_type = None
         total_square = None
-        adress = None
         description = None
         trader_type = None
         name = None
@@ -50,24 +50,23 @@ class CianScrapeAll(ScrapeAll):
         residential_complex = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(link_area[0])
-            adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()")).replace('\'', '"')
             price = ''.join(unidecode.unidecode(link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0][:-2]).split())
             residential_complex = self.parse_if_exists(link_area[0], './/div[@data-name="ContentRow"]/a/text()')
             if residential_complex is not None:
-                residential_complex = residential_complex[0]
+                residential_complex = residential_complex[0].replace('\'', '"')
             description_block = link_area[0].xpath('.//div[@data-name="Description"]/p/text()')
             if len(description_block) > 0:
-                description = description_block[0]
+                description = description_block[0].replace('\'', '"')
             link_area[1] = link_area[1].xpath('.//div[@data-name="BrandingLevelWrapper"]')[0]
             trader_container = link_area[1].xpath('.//div[contains(@class, "content")]')[0]
             trader_data = trader_container.xpath('.//span/text()')
             if len(trader_data) == 1:
-                name = trader_data[0]
+                name = trader_data[0].replace('\'', '"')
             else:
                 trader_type, name = trader_data[:2]
+                name = name.replace('\'', '"')
         except Exception as e:
-            print(e)
-            print('не получилось полностью спарсить обьявление')
+            print('can\'t parse listing', link, e)
 
 
         offer_data = {'id': id,
@@ -111,7 +110,7 @@ class CianScrapeAll(ScrapeAll):
         try:
             offer_count_text = tree.xpath("//div[@data-name='SummaryHeader']/h5/text()")[0].split()
         except:
-             return 0
+             return -1
         return int(''.join(offer_count_text[1:-1]))
 
     def get_desk_link(self) -> str:

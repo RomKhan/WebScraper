@@ -78,7 +78,6 @@ class ScrapeAll(ScraperAbstract):
         while offers_count > 0:
             t1 = time.time()
             url = self.get_desk_link()
-            print(f'Parse {url}')
 
             self.run_driver_on_page(url, driver)
             self.count_of_requests += 1
@@ -97,14 +96,14 @@ class ScrapeAll(ScraperAbstract):
             print(f'Parsed {self.count_of_parsed},'
                   f'taken {t2 - t1} seconds,'
                   f'send {self.count_of_requests} requests,'
-                  f'Can\'t parse {self.count_of_corrupted} offers')
+                  f'Can\'t parse {self.count_of_corrupted} offers, '
+                  f'url: {url}')
 
             if idx_diff == 0:
                 break
 
         self.prev_price += self.step
-        driver.close()
-        driver.quit()
+        self.delete_webdriver(driver)
 
     def parse_page(self, link, content):
         pass

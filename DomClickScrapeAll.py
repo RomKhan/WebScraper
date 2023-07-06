@@ -9,7 +9,7 @@ from ScrapeAll import ScrapeAll
 
 class DomClickScrapeAll(ScrapeAll):
     def __init__(self, url_components, data_saver, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.CLASS_NAME, 'app main-content', data_saver, url_components, 1500, 2000, 20, website_name, city, listing_type, 8)
+        ScrapeAll.__init__(self, By.CLASS_NAME, 'app main-content', data_saver, url_components, 1000, 2000, 20, website_name, city, listing_type, 8)
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)
@@ -35,6 +35,7 @@ class DomClickScrapeAll(ScrapeAll):
         try:
             title = offer.xpath('.//a[@data-test="product-snippet-property-offer"]')[0]
             link = title.get('href')
+            adress = ' '.join(offer.xpath(".//span[@data-e2-id='product-snippet-address']/text()")).replace('\'', '"')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None
@@ -42,7 +43,6 @@ class DomClickScrapeAll(ScrapeAll):
         rooms_count = None
         house_type = None
         total_square = None
-        adress = None
         description = None
         trader_type = None
         name = None
@@ -52,24 +52,22 @@ class DomClickScrapeAll(ScrapeAll):
         build_date = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(title)
-            adress = ' '.join(offer.xpath(".//span[@data-e2-id='product-snippet-address']/text()")).replace('\'', '"')
             price = ''.join(unidecode.unidecode(offer.xpath('.//div[@data-e2e-id="product-snippet-price-sale"]/p/text()')[0][:-2]).split())
             description_block = self.parse_if_exists(offer, './/a[@data-test="product-snippet-property-offer"]/../../div/div/text()')
             if description_block is not None:
-                description = description_block[0]
+                description = description_block[0].replace('\'', '"')
             residential_data = self.parse_if_exists(offer, ".//div[@data-e2e-id='flat-complex-icon']/../../..")
             if residential_data is not None:
-                residential_complex = residential_data[0].xpath('.//span/text()')[0]
+                residential_complex = residential_data[0].xpath('.//span/text()')[0].replace('\'', '"')
                 build_date_info = self.parse_if_exists(residential_data[0], './/div//div/text()')
                 if build_date_info is not None and len(build_date_info[0].split()) > 1:
                     build_date = build_date_info[0].split()[-2]
             developer_info = self.parse_if_exists(offer, ".//div[@data-e2e-id='product-snippet-developer']/span/text()")
             if developer_info is not None:
                 trader_type = 'Застройщик'
-                name = developer_info[0]
+                name = developer_info[0].replace('\'', '"')
         except Exception as e:
-            print(e)
-            print('не получилось полностью спарсить обьявление')
+            print('can\'t parse listing', link, e)
 
 
         offer_data = {'id': id,

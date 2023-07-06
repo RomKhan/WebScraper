@@ -31,7 +31,7 @@ class ScraperAbstract:
             WebDriverWait(driver, timeout=self.page_load_timeout).until(
                 EC.presence_of_element_located((self.by_settings, self.page_load_indicator)))
         except Exception as e:
-            print('i can\'t fully load this page', url)
+            #print('i can\'t fully load this page', url)
             return False
         return True
 
@@ -78,3 +78,11 @@ class ScraperAbstract:
         data['Дата публикации'] = datetime.date.today()
         data['Дата исчезновения'] = datetime.date.today()
         self.data_saver.data_to_save_queue.append(data)
+
+    def delete_webdriver(self, driver):
+        driver.close()
+        driver.delete_all_cookies()
+        driver.execute_script("window.localStorage.clear();")
+        driver.execute_script("window.sessionStorage.clear();")
+        driver.quit()
+

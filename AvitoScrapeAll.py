@@ -31,8 +31,15 @@ class AvitoScrapeAll(ScrapeAll):
         return idx
 
     def parse_offer(self, offer):
+        residential_complex = None
         try:
             link = offer.xpath('.//a[@itemprop="url"]')[0].get('href')
+            adress = offer.xpath(".//div[@data-marker='item-address']/*/p")
+            if len(adress) > 2:
+                residential_complex = adress[0].text
+                adress = adress[1].xpath('.//span/text()')[0].replace('\'', '"')
+            else:
+                adress = adress[0].xpath('.//span/text()')[0].replace('\'', '"')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None
@@ -40,30 +47,21 @@ class AvitoScrapeAll(ScrapeAll):
         rooms_count = None
         house_type = None
         total_square = None
-        adress = None
         description = None
         name = None
         flat_flour = None
         max_flours = None
-        residential_complex = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(offer)
-            adress = offer.xpath(".//div[@data-marker='item-address']/*/p")
-            if len(adress) > 2:
-                residential_complex = adress[0].text
-                adress = adress[1].xpath('.//span/text()')[0]
-            else:
-                adress = adress[0].xpath('.//span/text()')[0]
             price = offer.xpath('.//meta[@itemprop="price"]')[0].get('content')
             description_block = offer.xpath('.//div[contains(@class, "item-description")]/p/text()')
             if len(description_block) > 0:
-                description = description_block[0]
+                description = description_block[0].replace('\'', '"')
             user_atag = self.parse_if_exists(offer, './/div[contains(@class, "item-sellerInfo")]/div[contains(@class, "item-userInfo")]/*/a/p/text()')
             if user_atag is not None:
-                name = user_atag[0]
+                name = user_atag[0].replace('\'', '"')
         except Exception as e:
-            print(e)
-            print('не получилось полностью спарсить обьявление')
+            print('can\'t parse listing', link, e)
 
 
         offer_data = {'id': id,
@@ -103,7 +101,7 @@ class AvitoScrapeAll(ScrapeAll):
         try:
             offer_count_text = ''.join(unidecode.unidecode(tree.xpath("//span[starts-with(@class, 'page-title-count')]/text()")[0]).split())
         except:
-             return 0
+             return -1
         return int(offer_count_text)
 
     def get_desk_link(self) -> str:
