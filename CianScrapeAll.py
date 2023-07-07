@@ -8,7 +8,7 @@ from ScrapeAll import ScrapeAll
 
 class CianScrapeAll(ScrapeAll):
     def __init__(self, url_components, data_saver, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 700, 1500, 28, website_name, city, listing_type, 8)
+        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', data_saver, url_components, 700, 1500, 28, website_name, city, listing_type, 10)
 
     def parse_page(self, link, content):
         tree = html.fromstring(content)

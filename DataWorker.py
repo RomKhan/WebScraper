@@ -158,7 +158,7 @@ class DataWorker:
             if history_keys is not None and len(history_keys) > 0:
                 values = [new_record[key] for key in history_keys]
                 history_keys.append(history_id)
-                values.append(datetime.date.today())
+                values.append(id)
                 insert_query = f'INSERT INTO {table_name}_Changes ({", ".join(history_keys)}) VALUES ({", ".join(["%s"] * len(history_keys))})'
                 data = tuple(values)
                 cursor.execute(insert_query, data)

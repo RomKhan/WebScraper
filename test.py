@@ -16,32 +16,39 @@ import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from fake_useragent import UserAgent
 from lxml import etree
 from lxml import html
 from lxml.etree import tostring
 import urllib.request
+from user_agent import generate_user_agent, generate_navigator
 
+useragent = UserAgent()
 PROXY = "92.255.7.162:8080"
 chrome_options = webdriver.ChromeOptions()
 #chrome_options.add_argument('--proxy-server=%s' % PROXY)
 #chrome_options.add_argument('--headless')
 # chrome_options.add_argument('--no-sandbox')
 # chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_options.add_argument("--window-size=%s" % "1920,1080")
+#chrome_options.add_argument("--window-size=%s" % "100, 200")
+chrome_options.add_argument('--disable-gpu')
 chrome_options.page_load_strategy = 'none'
 #chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-#chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 YaBrowser/20.12.2.105 Yowser/2.5 Safari/537.36'
+chrome_options.add_argument(f"--user-agent={user_agent}")
+chrome_options.add_argument("--incognito")
+chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 driver = uc.Chrome(options=chrome_options)
 #driver = webdriver.Chrome(options=chrome_options)
 # driver.get("https://www.google.com")
 # scraper = cloudscraper.create_scraper()
 
 t1 = time.time()
-url = 'https://www.cian.ru/sale/flat/289082576/'
+url = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=5000000&sort=published&sort_dir=desc&offset=1620'
 driver.get(url)
 # time.sleep(300)
 try:
-    WebDriverWait(driver, timeout=100).until(EC.presence_of_element_located((By.XPATH, "//div[@data-name='PriceInfo']")))
+    WebDriverWait(driver, timeout=20).until(EC.presence_of_element_located((By.XPATH, "//div[@data-name='PriceInfo']")))
     driver.execute_script("window.stop();")
 except:
     print('не успел')

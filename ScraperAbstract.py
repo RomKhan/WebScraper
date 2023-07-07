@@ -1,8 +1,8 @@
+import random
 from enum import Enum
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 import undetected_chromedriver as uc
 import datetime
 
@@ -24,6 +24,18 @@ class ScraperAbstract:
         self.city_db_id = self.data_saver.get_city_id(city)
         self.listing_type_db_id = self.data_saver.get_listing_type_id(listing_type)
         self.previous_idx = set()
+        self.useragents = [
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.3',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.3',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 YaBrowser/23.5.2.625 Yowser/2.5 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 YaBrowser/20.12.2.105 Yowser/2.5 Safari/537.36'
+        ]
 
     def run_driver_on_page(self, url, driver):
         try:
@@ -47,13 +59,16 @@ class ScraperAbstract:
         # chrome_options.add_argument('--proxy-server=%s' % PROXY)
         chrome_options.add_argument('--headless')
         #chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument("--incognito")
+        chrome_options.add_argument(f"--user-agent={random.choice(self.useragents)}")
         #chrome_options.add_argument('--disable-dev-shm-usage')
 
         #chrome_options.add_argument("enable-automation")
         #chrome_options.add_argument("--disable-dev-shm-usage")
         #chrome_options.add_argument("--disable-browser-side-navigation")
-        #chrome_options.add_argument("--disable-gpu")
 
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         chrome_options.add_argument("--window-size=%s" % self.WINDOW_SIZE)
         chrome_options.page_load_strategy = 'none'
         #chrome_options.add_argument('--blink-settings=imagesEnabled=false')
