@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 import undetected_chromedriver as uc
 import datetime
+import requests
 
 
 class ListingMode(Enum):
@@ -24,6 +25,7 @@ class ScraperAbstract:
         self.city_db_id = self.data_saver.get_city_id(city)
         self.listing_type_db_id = self.data_saver.get_listing_type_id(listing_type)
         self.previous_idx = set()
+        self.db_flow_url = 'http://database:5000/save'
         self.useragents = [
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
@@ -57,7 +59,7 @@ class ScraperAbstract:
         chrome_options = webdriver.ChromeOptions()
         # PROXY = "92.255.7.162:8080"
         # chrome_options.add_argument('--proxy-server=%s' % PROXY)
-        chrome_options.add_argument('--headless')
+        #chrome_options.add_argument('--headless')
         #chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument("--incognito")
@@ -72,7 +74,10 @@ class ScraperAbstract:
         chrome_options.add_argument("--window-size=%s" % self.WINDOW_SIZE)
         chrome_options.page_load_strategy = 'none'
         #chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-        driver = uc.Chrome(options=chrome_options, user_multi_procs=True)
+        driver = uc.Chrome(options=chrome_options,
+                           user_multi_procs=True,
+                           #driver_executable_path="/Users/roman_khan/Downloads/chromedriver_mac64/chromedriver"
+                           )
         #driver = webdriver.Chrome(options=chrome_options)
         return driver
 
@@ -92,12 +97,13 @@ class ScraperAbstract:
         data['Тип обьявления id'] = self.listing_type_db_id
         data['Дата публикации'] = datetime.date.today()
         data['Дата исчезновения'] = datetime.date.today()
+        #requests.post(self.db_flow_url, json=data)
         self.data_saver.data_to_save_queue.append(data)
 
     def delete_webdriver(self, driver):
         driver.close()
         driver.delete_all_cookies()
-        driver.execute_script("window.localStorage.clear();")
-        driver.execute_script("window.sessionStorage.clear();")
+        #driver.execute_script("window.localStorage.clear();")
+        #driver.execute_script("window.sessionStorage.clear();")
         driver.quit()
 

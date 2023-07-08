@@ -5,7 +5,9 @@ import pandas as pd
 import warnings
 
 import psycopg2
+from flask import Flask, request
 
+app = Flask(__name__)
 
 class DataWorker:
     def __init__(self):
@@ -297,8 +299,6 @@ class DataWorker:
             value = data[field].replace(',', '.')
             return type(value)
         except Exception as e:
-            # print(e)
-            # print(field, data[field])
             return None
 
     def add_none_fields(self, data):
@@ -320,7 +320,6 @@ class DataWorker:
                 data[key] = None
 
     def type_convert(self, data):
-        #data['Цена'] = int(data['Цена'])
         data['Цена'] = DataWorker.type_convert_if_possible(data, 'Цена', int)
         data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data['Общая площадь'] = DataWorker.type_convert_if_possible(data, 'Общая площадь', float)
@@ -360,6 +359,28 @@ class DataWorker:
                     self.update_or_past_listing_images(data)
             else:
                 time.sleep(5)
+
+    @app.route('/save_listing', methods=['POST'])
+    def save_db(self):
+        data = request.json
+        self.data_dict_flatten(data)
+        self.add_none_fields(data)
+        self.type_convert(data)
+        if data['Название продаца'] is not None:
+            self.update_or_past_seller(data)
+        self.update_or_past_addres(data)
+        self.update_or_past_house_features(data)
+        self.update_or_past_listings_static_features(data)
+        is_new = self.update_or_past_listings(data)
+        if data['Тип обьявления id'] == 1:
+            self.update_or_past_listings_sale(data)
+        else:
+            self.update_or_past_listings_rent(data)
+
+        if is_new:
+            self.update_or_past_websites_listings_map(data)
+            self.update_or_past_listing_images(data)
+
 
     def run_csv(self):
         if os.path.exists('offers.csv'):

@@ -110,7 +110,12 @@ class CianScrapeAll(ScrapeAll):
         try:
             offer_count_text = tree.xpath("//div[@data-name='SummaryHeader']/h5/text()")[0].split()
         except:
-             return -1
+            is_zero = tree.xpath("//h3[@data-name='EmptySearchContent']")
+            if len(is_zero) > 0:
+                return 0
+            else:
+                return -1
+
         return int(''.join(offer_count_text[1:-1]))
 
     def get_desk_link(self) -> str:

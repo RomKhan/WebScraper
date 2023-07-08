@@ -36,4 +36,7 @@ import requests
 # print("Longitude = ", getLoc.longitude)
 # t2 = time.time()
 # print(t2-t1)
-print(''.join(unidecode.unidecode('2 990 000&nbsp;₽'[:-2]).split()))
+import subprocess
+
+chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+subprocess.call([chrome_path])
