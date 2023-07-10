@@ -1,0 +1,50 @@
+version: '3'
+services:
+  cian_shallow_sale:
+    build:
+      context: .
+      dockerfile: shallow_sale_parser/Dockerfile
+    depends_on:
+      - app
+    environment:
+      - CHROMEDRIVER_PATH=/var/chromedriver/chromedriver_copy
+      - WEBSITE_NAME=циан
+      - CITY=Москва
+  domclick_shallow_sale:
+    build:
+      context: .
+      dockerfile: shallow_sale_parser/Dockerfile
+    depends_on:
+      - app
+    environment:
+      - CHROMEDRIVER_PATH=/var/chromedriver/chromedriver_copy
+      - WEBSITE_NAME=домклик
+      - CITY=Москва
+  avito_shallow_sale:
+    build:
+      context: .
+      dockerfile: shallow_sale_parser/Dockerfile
+    depends_on:
+      - app
+    environment:
+      - CHROMEDRIVER_PATH=/var/chromedriver/chromedriver_copy
+      - WEBSITE_NAME=авито
+      - CITY=Москва
+  app:
+    build: ./db_manager_service
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./images/cian:/app/cian
+      - ./images/domclick:/app/domclick
+      - ./images/avito:/app/avito
+    depends_on:
+      - db
+  db:
+    image: postgres
+    ports:
+      - "8081:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1242241к
+      POSTGRES_DB: realestatedb
