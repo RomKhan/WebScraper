@@ -1,27 +1,11 @@
-import base64
-import os
-import shutil
-
-import cv2
-import yadisk
-
-import undetected_chromedriver as uc
+from old import undetected_chromedriver as uc
 import time
-import requests
-import scrapy
-import cloudscraper
 from selenium import webdriver
-from bs4 import BeautifulSoup, SoupStrainer
-import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from fake_useragent import UserAgent
-from lxml import etree
 from lxml import html
-from lxml.etree import tostring
-import urllib.request
-from user_agent import generate_user_agent, generate_navigator
 
 useragent = UserAgent()
 PROXY = "92.255.7.162:8080"

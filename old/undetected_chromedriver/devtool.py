@@ -104,7 +104,7 @@ def test():
     import sys, os
 
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-    import undetected_chromedriver as uc
+    from old import undetected_chromedriver as uc
     import threading
 
     def collector(

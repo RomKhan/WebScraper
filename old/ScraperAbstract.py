@@ -3,7 +3,7 @@ from enum import Enum
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
-import undetected_chromedriver as uc
+from old import undetected_chromedriver as uc
 import datetime
 
 

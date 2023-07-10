@@ -19,4 +19,4 @@ COPY ./app /app
 # Запуск приложения Flask
 WORKDIR /app
 EXPOSE 8080
-CMD ["python", "app.py","--host", "0.0.0.0"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]

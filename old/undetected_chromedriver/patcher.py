@@ -90,7 +90,7 @@ class Patcher(object):
         if not executable_path:
             if not self.user_multi_procs:
                 self.executable_path = os.path.abspath(
-                    os.path.join(".", self.executable_path)
+                    os.path.join("", self.executable_path)
                 )
 
         if executable_path:
