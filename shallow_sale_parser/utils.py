@@ -1,10 +1,10 @@
 import time
 
 
-def parse_all(scraper_type, link, city, type, website_name):
+def parse_all(scraper_type, link, city, type):
     t1 = time.time()
     url = scraper_type.parse_link(link)
-    scraper = scraper_type(url, website_name, city, type)
+    scraper = scraper_type(url, city, type)
     while not scraper.is_end:
         scraper.iter()
     t2 = time.time()

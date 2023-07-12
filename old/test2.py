@@ -26,12 +26,8 @@ import yadisk
 # print("Longitude = ", getLoc.longitude)
 # t2 = time.time()
 # print(t2-t1)
-disk = yadisk.YaDisk("ec228561582a46baa7c3f88907c0395d", "46145e37e4cf415d8283490af86b6113")
-disk.token = 'y0_AgAAAAANYmzbAAf07QAAAADl13LC72bkYNO7So6osrxeT1dmwOorZhQ'
-if disk.exists('temp'):
-    obj = disk.remove('temp', force_async=True, n_retries=5, retry_interval=1)
-    while 'in-progress' == obj.get_status():
-        print(obj.get_status())
-    print(obj.get_status())
+import cloudscraper
 
-disk.mkdir('temp', n_retries=5, retry_interval=1)
+scraper = cloudscraper.create_scraper()  # returns a CloudScraper instance
+# Or: scraper = cloudscraper.CloudScraper()  # CloudScraper inherits from requests.Session
+print(scraper.get("https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=10000000&sort=published&sort_dir=desc&sale_price__gte=100000&offset=0").text)  # => "<!DOCTYPE html><html><head>..."

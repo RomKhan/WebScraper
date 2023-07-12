@@ -1,8 +1,11 @@
+from KeysEnum import KeysEnum
+
+
 class DataWorker:
     def __init__(self, db_connection):
         self.seller_keys = ['Название продаца', 'Тип продаца']
         self.lisitng_type_keys = ['Тип обьявления']
-        self.adress_keys = ['Адресс', 'Город id']
+        self.adress_keys = ['Адресс', KeysEnum.CITY_ID.value]
         self.house_fetures_keys = [
             'Этажей в доме',
             'Строительная серия',
@@ -21,7 +24,7 @@ class DataWorker:
             'Название ЖК',
         ]
         self.listings_static_keys = [
-            'id',
+            KeysEnum.LISTING_ID.value,
             'Число комнат',
             'Тип жилья',
             'Общая площадь',
@@ -37,21 +40,21 @@ class DataWorker:
             'Лоджия',
             'Балкон',
             'Отделка',
-            'Дата публикации'
+            KeysEnum.APPEARING_DATE.value
         ]
         self.listings_keys = [
-            'id',
-            'Цена',
-            'Дата исчезновения',
+            KeysEnum.LISTING_ID.value,
+            KeysEnum.PRICE.value,
+            KeysEnum.DESAPEAR_DATE.value,
             'Описание'
         ]
         self.lisitng_sale_keys = [
-            'id',
+            KeysEnum.LISTING_ID.value,
             'Условия сделки',
             'Ипотека'
         ]
         self.lisitng_rent_keys = [
-            'id'
+            KeysEnum.LISTING_ID.value
         ]
         self.website_listings_map_keys = [
             'Ссылка'
@@ -61,6 +64,26 @@ class DataWorker:
         ]
         self.not_changed_keys = ['appearing_date']
         self.db_connection = db_connection
+
+    # def get_price_windows(self, website_id, max_listings):
+    #     cursor = self.db_connection.cursor()
+    #     select_query = f"""
+    #                     SELECT MAX(price) AS max_price
+    #                     FROM (
+    #                         SELECT price,
+    #                         (ROW_NUMBER() OVER (ORDER BY price ASC) - 1) / {max_listings} AS win
+    #                         FROM Websites_Listings_Map
+    #                             JOIN Listings USING(listing_id)
+    #                             JOIN Listings_Static_Features ON listing_id = listings_static_features_id
+    #                             WHERE website_id = {website_id}
+    #                         AND desapear_date = (current_date - INTEGER '0')
+    #                         ORDER BY price
+    #                         ) AS subquery
+    #                     GROUP BY win
+    #                     ORDER BY max_price
+    #                 """
+    #     cursor.execute(select_query)
+    #     values = cursor.fetchone()
 
     def get_id_by_condition(self, talbe, table_id, condition_value, condition_column):
         cursor = self.db_connection.cursor()
@@ -157,102 +180,102 @@ class DataWorker:
 
     def update_or_past_seller(self, data):
         record = {
-            'seller_name': data['Название продаца'],
-            'seller_type': data['Тип продаца'],
+            KeysEnum.SELLER_NAME.value: data['Название продаца'],
+            KeysEnum.SELLER_TYPE.value: data['Тип продаца'],
         }
-        return self.update_or_past(record, 'seller_name', 'Sellers')
+        return self.update_or_past(record, KeysEnum.SELLER_NAME.value, 'Sellers')
 
     def update_or_past_addres(self, data):
         record = {
-            'addres': data['Адресс'],
-            'city_id': data['Город id']
+            KeysEnum.ADDRES.value: data['Адресс'],
+            KeysEnum.CITY_ID.value: data[KeysEnum.CITY_ID.value]
         }
-        return self.update_or_past(record, 'addres', 'Address')
+        return self.update_or_past(record, KeysEnum.ADDRES.value, 'Address')
 
     def update_or_past_house_features(self, data):
         record = {
-            'addres': data['Адресс'],
-            'max_floor': data['Этажей в доме'],
-            'house_serie': data['Строительная серия'],
-            'passenger_elevator_count': data['Пассажирский лифт'],
-            'freight_elevator_count': data['Грузовой лифт'],
-            'parking_type': data['Парковка'],
-            'entrance_count': data['Подъезды'],
-            'is_derelicted': data['Аварийность'],
-            'house_type': data['Тип дома'],
-            'gas_supply_type': data['Газоснабжение'],
-            'is_chute': data['Мусоропровод'],
-            'end_build_year': data['Год постройки'] if data['Год постройки'] is not None else data['Год сдачи'],
-            'flooring_type': data['Тип перекрытий'],
-            'house_status': data['Дом'],
-            'residential_complex_name': data['Название ЖК'],
+            KeysEnum.ADDRES.value: data['Адресс'],
+            KeysEnum.MAX_FLOOR.value: data['Этажей в доме'],
+            KeysEnum.HOUSE_SERIE.value: data['Строительная серия'],
+            KeysEnum.PASSENGER_ELEVATOR_COUNT.value: data['Пассажирский лифт'],
+            KeysEnum.FREIGHT_ELEVATOR_COUNT.value: data['Грузовой лифт'],
+            KeysEnum.PARKING_TYPE.value: data['Парковка'],
+            KeysEnum.ENTRANCE_COUNT.value: data['Подъезды'],
+            KeysEnum.IS_DERELICTED.value: data['Аварийность'],
+            KeysEnum.HOUSE_TYPE.value: data['Тип дома'],
+            KeysEnum.GAS_SUPPLY_TYPE.value: data['Газоснабжение'],
+            KeysEnum.IS_CHUTE.value: data['Мусоропровод'],
+            KeysEnum.END_BUILD_YEAR.value: data['Год постройки'] if data['Год постройки'] is not None else data['Год сдачи'],
+            KeysEnum.FLOORING_TYPE.value: data['Тип перекрытий'],
+            KeysEnum.HOUSE_STATUS.value: data['Дом'],
+            KeysEnum.RESIDENTIAL_COMPLEX_NAME.value: data['Название ЖК'],
         }
-        history_keys = ['addres','end_build_year', 'house_status', 'is_derelicted']
-        return self.update_or_past(record, 'addres', 'House_Features', history_keys)
+        history_keys = [KeysEnum.ADDRES.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
+        return self.update_or_past(record, KeysEnum.ADDRES.value, 'House_Features', history_keys)
 
     def update_or_past_listings_static_features(self, data):
         record = {
-            'listings_static_features_id': data['id'],
-            'listing_type_id': data['Тип обьявления id'],
-            'addres': data['Адресс'],
-            'room_count': data['Число комнат'],
-            'property_type': data['Тип жилья'],
-            'total_area': data['Общая площадь'],
-            'living_area': data['Жилая площадь'],
-            'kitchen_area': data['Площадь кухни'],
-            'apartment_floor': data['Этаж квартиры'],
-            'ceiling_height': data['Высота потолков'],
-            'window_view': data['Вид из окон'],
-            'renovation': data['Ремонт'],
-            'heating_type': data['Отопление'],
-            'combined_bathroom_count': data['Совмещенный санузел'],
-            'separate_bathroom_count': data['Раздельный санузел'],
-            'loggia_count': data['Лоджия'],
-            'balcony_count': data['Балкон'],
-            'decoration_finishing_type': data['Отделка'],
-            'appearing_date': data['Дата публикации'],
-            'desapear_date': data['Дата исчезновения']
+            KeysEnum.LISTINGS_STATIC_FEATURES_ID.value: data[KeysEnum.LISTING_ID.value],
+            KeysEnum.LISTING_TYPE_ID.value: data[KeysEnum.LISTING_TYPE_ID.value],
+            KeysEnum.ADDRES.value: data['Адресс'],
+            KeysEnum.ROOM_COUNT.value: data['Число комнат'],
+            KeysEnum.PROPERTY_TYPE.value: data['Тип жилья'],
+            KeysEnum.TOTAL_AREA.value: data['Общая площадь'],
+            KeysEnum.LIVING_AREA.value: data['Жилая площадь'],
+            KeysEnum.KITCHEN_AREA.value: data['Площадь кухни'],
+            KeysEnum.APARTMENT_FLOOR.value: data['Этаж квартиры'],
+            KeysEnum.CEILING_HEIGHT.value: data['Высота потолков'],
+            KeysEnum.WINDOW_VIEW.value: data['Вид из окон'],
+            KeysEnum.RENOVATION.value: data['Ремонт'],
+            KeysEnum.HEATING_TYPE.value: data['Отопление'],
+            KeysEnum.COMBINED_BATHROOM_COUNT.value: data['Совмещенный санузел'],
+            KeysEnum.SEPARATE_BATHROOM_COUNT.value: data['Раздельный санузел'],
+            KeysEnum.LOGGIA_COUNT.value: data['Лоджия'],
+            KeysEnum.BALCONY_COUNT.value: data['Балкон'],
+            KeysEnum.DECORATION_FINISHING_TYPE.value: data['Отделка'],
+            KeysEnum.APPEARING_DATE.value: data[KeysEnum.APPEARING_DATE.value],
+            KeysEnum.DESAPEAR_DATE.value: data[KeysEnum.DESAPEAR_DATE.value]
         }
-        return self.update_or_past(record, 'listings_static_features_id', 'Listings_Static_Features')
+        return self.update_or_past(record, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
 
     def update_or_past_listings(self, data):
         record = {
-            'listing_id': data['id'],
-            'seller_name': data['Название продаца'],
-            'description': data['Описание'],
-            'price': data['Цена'],
+            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
+            KeysEnum.SELLER_NAME.value: data['Название продаца'],
+            KeysEnum.DESCRIPTION.value: data['Описание'],
+            KeysEnum.PRICE.value: data[KeysEnum.PRICE.value],
         }
-        history_keys = ['listing_id', 'seller_name', 'description', 'price']
-        return self.update_or_past(record, 'listing_id', 'Listings', history_keys)
+        history_keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
+        return self.update_or_past(record, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
 
     def update_or_past_listings_sale(self, data):
         record = {
-            'listings_sale_id': data['id'],
-            'conditions': data['Условия сделки'],
-            'is_mortgage_available': data['Ипотека'],
+            KeysEnum.LISTINGS_SALE_ID.value: data[KeysEnum.LISTING_ID.value],
+            KeysEnum.CONDITIONS.value: data['Условия сделки'],
+            KeysEnum.IS_MORTGAGE_AVAILABLE.value: data['Ипотека'],
         }
-        history_keys = ['listings_sale_id', 'conditions', 'is_mortgage_available']
-        return self.update_or_past(record, 'listings_sale_id', 'Listings_Sale', history_keys)
+        history_keys = [KeysEnum.LISTINGS_SALE_ID.value, KeysEnum.CONDITIONS.value, KeysEnum.IS_MORTGAGE_AVAILABLE.value]
+        return self.update_or_past(record, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
 
     def update_or_past_listings_rent(self, data):
         record = {
-            'listings_rent_id': data['id']
+            KeysEnum.LISTINGS_RENT_ID.value: data[KeysEnum.LISTING_ID.value]
         }
-        history_keys = ['listings_rent_id']
-        return self.update_or_past(record, 'listings_rent_id', 'Listings_Rent', history_keys)
+        history_keys = [KeysEnum.LISTINGS_RENT_ID.value]
+        return self.update_or_past(record, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
 
     def update_or_past_websites_listings_map(self, data):
         record = {
-            'listing_id': data['id'],
-            'website_id': data['Сайт id'],
-            'link_url': data['Ссылка'],
+            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
+            KeysEnum.WEBSITE_ID.value: data[KeysEnum.WEBSITE_ID.value],
+            KeysEnum.LINK_URL.value: data['Ссылка'],
         }
         self.instert_to_db(record, 'Websites_Listings_Map')
 
     def update_or_past_listing_images(self, data):
         record = {
-            'listing_id': data['id'],
-            'image_path': data['Путь к картинкам']
+            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
+            KeysEnum.IMAGE_PATH.value: data['Путь к картинкам']
         }
         self.instert_to_db(record, 'Listing_Images')
 
@@ -280,7 +303,7 @@ class DataWorker:
                         set(self.listings_keys) | \
                         set(self.website_listings_map_keys) |\
                         set(self.listings_images_keys)
-        if data['Тип обьявления id'] == 2:
+        if data[KeysEnum.LISTING_TYPE_ID.value] == 2:
             possible_keys |= set(self.lisitng_rent_keys)
         else:
             possible_keys |= set(self.lisitng_sale_keys)
@@ -290,7 +313,7 @@ class DataWorker:
                 data[key] = None
 
     def type_convert(self, data):
-        data['Цена'] = DataWorker.type_convert_if_possible(data, 'Цена', int)
+        data[KeysEnum.PRICE.value] = DataWorker.type_convert_if_possible(data, KeysEnum.PRICE.value, int)
         data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data['Общая площадь'] = DataWorker.type_convert_if_possible(data, 'Общая площадь', float)
         data['Жилая площадь'] = DataWorker.type_convert_if_possible(data, 'Жилая площадь', float)
@@ -305,3 +328,6 @@ class DataWorker:
         data['Раздельный санузел'] = DataWorker.type_convert_if_possible(data, 'Раздельный санузел', int)
         data['Лоджия'] = DataWorker.type_convert_if_possible(data, 'Лоджия', int)
         data['Балкон'] = DataWorker.type_convert_if_possible(data, 'Балкон', int)
+
+
+

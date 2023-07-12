@@ -13,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'   # Максимальное количество виртуальных ЦП
+          cpus: '1'   # Максимальное количество виртуальных ЦП
           memory: 800M    # Максимальный лимит памяти
         reservations:
           cpus: '0.2'   # Минимальное количество виртуальных ЦП
@@ -31,7 +31,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'   # Максимальное количество виртуальных ЦП
+          cpus: '1'   # Максимальное количество виртуальных ЦП
           memory: 512M    # Максимальный лимит памяти
         reservations:
           cpus: '0.2'   # Минимальное количество виртуальных ЦП
@@ -49,13 +49,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'   # Максимальное количество виртуальных ЦП
+          cpus: '1'   # Максимальное количество виртуальных ЦП
           memory: 512M    # Максимальный лимит памяти
         reservations:
           cpus: '0.2'   # Минимальное количество виртуальных ЦП
           memory: 512M  # Минимальный лимит памяти
   app:
-    build: ./db_manager_service
+    build:
+      context: .
+      dockerfile: db_manager_service/Dockerfile
     ports:
       - "8080:8080"
     volumes:

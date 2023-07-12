@@ -22,6 +22,8 @@ RUN pip install -r /app/requirements.txt
 COPY ./abstract /app/abstract/
 RUN pip install -r app//abstract/requirements.txt
 
+COPY ./KeysEnum.py /app
+
 # Create the necessary directories for copying the binary
 RUN mkdir -p /var/chromedriver/
 

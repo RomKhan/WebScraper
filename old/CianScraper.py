@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import unidecode
 
-from Scraper import Scraper
+from abstract.Scraper import Scraper
 
 
 class CianScraper(Scraper):

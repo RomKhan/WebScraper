@@ -4,6 +4,7 @@ import unidecode
 from selenium.webdriver.common.by import By
 from lxml import html
 
+from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
 import logging
 
@@ -11,28 +12,19 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class DomClickScrapeAll(ScrapeAll):
-    def __init__(self, url_components, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.CLASS_NAME, 'app main-content', url_components, 1000, 2000, 20, website_name, city, listing_type, 8)
-
-    def parse_page(self, link, content):
-        tree = html.fromstring(content)
-        idx = set()
-        try:
-            offers = tree.xpath('//div[@data-e2e-id="offers-list__item"]')
-            corrupt_offers = 0
-            for offer in offers:
-                data, id = self.parse_offer(offer)
-                if not data:
-                    corrupt_offers += 1
-                    self.count_of_corrupted += 1
-                    continue
-                idx.add(id)
-                self.to_database(data)
-            self.count_of_parsed += len(offers) - corrupt_offers
-        except Exception as e:
-            print(e, link)
-            return None
-        return idx
+    def __init__(self, url_components, city, listing_type):
+        ScrapeAll.__init__(self,
+                           By.CLASS_NAME,
+                           'app main-content',
+                           url_components,
+                           1000,
+                           2000,
+                           20,
+                           'Домклик',
+                           city,
+                           listing_type,
+                           8,
+                           offers_xpath='//div[@data-e2e-id="offers-list__item"]')
 
     def parse_offer(self, offer):
         try:
@@ -75,8 +67,8 @@ class DomClickScrapeAll(ScrapeAll):
             )
 
 
-        offer_data = {'id': id,
-                      'Цена': price,
+        offer_data = {KeysEnum.LISTING_ID.value: id,
+                      KeysEnum.PRICE.value: price,
                       'Число комнат': rooms_count,
                       'Тип жилья': house_type,
                       'Общая площадь': total_square,
@@ -116,12 +108,12 @@ class DomClickScrapeAll(ScrapeAll):
 
     def get_desk_link(self) -> str:
         if self.current_page < 2 and self.prev_price == 0:
-            return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&offset=0'
+            return f'{self.url_components[0]}&{self.url_components[1]}&offset=0'
         elif self.current_page < 2:
-            return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset=0'
+            return f'{self.url_components[0]}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset=0'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&offset={(self.current_page - 1) * 20}'
-        return f'{self.url_components[0]}&sale_price__lte={self.prev_price + self.step}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset={(self.current_page - 1)* 20}'
+            return f'{self.url_components[0]}&{self.url_components[1]}&offset={(self.current_page - 1) * 20}'
+        return f'{self.url_components[0]}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset={(self.current_page - 1)* 20}'
 
     @staticmethod
     def parse_link(url):

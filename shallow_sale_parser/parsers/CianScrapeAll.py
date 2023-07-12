@@ -4,6 +4,7 @@ import unidecode
 from selenium.webdriver.common.by import By
 from lxml import html
 
+from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
 import logging
 
@@ -11,28 +12,19 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class CianScrapeAll(ScrapeAll):
-    def __init__(self, url_components, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.XPATH, '//div[@data-name="SummaryHeader"]', url_components, 700, 1500, 28, website_name, city, listing_type, 10)
-
-    def parse_page(self, link, content):
-        tree = html.fromstring(content)
-        idx = set()
-        try:
-            offers = tree.xpath('//article[@data-name="CardComponent"]')
-            corrupt_offers = 0
-            for offer in offers:
-                data, id = self.parse_offer(offer)
-                if not data:
-                    corrupt_offers += 1
-                    self.count_of_corrupted += 1
-                    continue
-                idx.add(id)
-                self.to_database(data)
-            self.count_of_parsed += len(offers) - corrupt_offers
-        except Exception as e:
-            print(e, link)
-            return None
-        return idx
+    def __init__(self, url_components, city, listing_type):
+        ScrapeAll.__init__(self,
+                           By.XPATH,
+                           '//div[@data-name="SummaryHeader"]',
+                           url_components,
+                           700,
+                           1500,
+                           28,
+                           'Циан',
+                           city,
+                           listing_type,
+                           10,
+                           offers_xpath='//article[@data-name="CardComponent"]')
 
     def parse_offer(self, offer):
         link_area = offer.xpath('.//div[@data-name="LinkArea"]')
@@ -75,8 +67,8 @@ class CianScrapeAll(ScrapeAll):
             )
 
 
-        offer_data = {'id': id,
-                      'Цена': price,
+        offer_data = {KeysEnum.LISTING_ID.value: id,
+                      KeysEnum.PRICE.value: price,
                       'Число комнат': rooms_count,
                       'Тип жилья': house_type,
                       'Общая площадь': total_square,
@@ -126,12 +118,12 @@ class CianScrapeAll(ScrapeAll):
 
     def get_desk_link(self) -> str:
         if self.current_page < 2 and self.prev_price == 0:
-            return f'{self.url_components[0]}&maxprice={self.prev_price + self.step}&{self.url_components[1]}&{self.url_components[2]}'
+            return f'{self.url_components[0]}&{self.url_components[1]}&{self.url_components[2]}'
         elif self.current_page < 2:
-            return f'{self.url_components[0]}&maxprice={self.prev_price + self.step}&minprice={self.prev_price}&{self.url_components[1]}&{self.url_components[2]}'
+            return f'{self.url_components[0]}&minprice={self.prev_price}&{self.url_components[1]}&{self.url_components[2]}'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&maxprice={self.prev_price + self.step}&{self.url_components[1]}&p={self.current_page}&{self.url_components[2]}'
-        return f'{self.url_components[0]}&maxprice={self.prev_price + self.step}&minprice={self.prev_price}&{self.url_components[1]}&p={self.current_page}&{self.url_components[2]}'
+            return f'{self.url_components[0]}&{self.url_components[1]}&p={self.current_page}&{self.url_components[2]}'
+        return f'{self.url_components[0]}&minprice={self.prev_price}&{self.url_components[1]}&p={self.current_page}&{self.url_components[2]}'
 
     @staticmethod
     def parse_link(url):

@@ -4,34 +4,26 @@ import unidecode
 from selenium.webdriver.common.by import By
 from lxml import html
 
+from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class AvitoScrapeAll(ScrapeAll):
-    def __init__(self, url_components, website_name, city, listing_type):
-        ScrapeAll.__init__(self, By.CSS_SELECTOR, "span[class^='page-title-count']", url_components, 3500, 5000, 50, website_name, city, listing_type, 15)
-
-    def parse_page(self, link, content):
-        tree = html.fromstring(content)
-        idx = set()
-        try:
-            offers = tree.xpath("//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]")
-            corrupt_offers = 0
-            for offer in offers:
-                data, id = self.parse_offer(offer)
-                if not data:
-                    corrupt_offers += 1
-                    self.count_of_corrupted += 1
-                    continue
-                idx.add(id)
-                self.to_database(data)
-            self.count_of_parsed += len(offers) - corrupt_offers
-        except Exception as e:
-            print(e, link)
-            return None
-        return idx
+    def __init__(self, url_components, city, listing_type):
+        ScrapeAll.__init__(self,
+                           By.CSS_SELECTOR,
+                           "span[class^='page-title-count']",
+                           url_components,
+                           3500,
+                           5000,
+                           50,
+                           'Авито',
+                           city,
+                           listing_type,
+                           15,
+                           offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]")
 
     def parse_offer(self, offer):
         residential_complex = None
@@ -69,8 +61,8 @@ class AvitoScrapeAll(ScrapeAll):
             )
 
 
-        offer_data = {'id': id,
-                      'Цена': price,
+        offer_data = {KeysEnum.LISTING_ID.value: id,
+                      KeysEnum.PRICE.value: price,
                       'Число комнат': rooms_count,
                       'Тип жилья': house_type,
                       'Общая площадь': total_square,
@@ -111,12 +103,12 @@ class AvitoScrapeAll(ScrapeAll):
 
     def get_desk_link(self) -> str:
         if self.current_page < 2 and self.prev_price == 0:
-            return f'{self.url_components[0]}&pmax={self.prev_price + self.step}&{self.url_components[1]}'
+            return f'{self.url_components[0]}&{self.url_components[1]}'
         elif self.current_page < 2:
-            return f'{self.url_components[0]}&pmax={self.prev_price + self.step}&pmin={self.prev_price}&{self.url_components[1]}'
+            return f'{self.url_components[0]}&pmin={self.prev_price}&{self.url_components[1]}'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&pmax={self.prev_price + self.step}&p={self.current_page}&{self.url_components[1]}'
-        return f'{self.url_components[0]}&pmax={self.prev_price + self.step}&pmin={self.prev_price}&p={self.current_page}&{self.url_components[1]}'
+            return f'{self.url_components[0]}&p={self.current_page}&{self.url_components[1]}'
+        return f'{self.url_components[0]}&pmin={self.prev_price}&p={self.current_page}&{self.url_components[1]}'
 
     @staticmethod
     def parse_link(url):

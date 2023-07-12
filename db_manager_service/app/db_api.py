@@ -1,6 +1,8 @@
 import datetime
 
 from flask import Blueprint, request
+
+from KeysEnum import KeysEnum
 from db_utils import *
 
 bp = Blueprint("db", __name__, url_prefix="/db")
@@ -9,8 +11,8 @@ bp = Blueprint("db", __name__, url_prefix="/db")
 @bp.route('/saveListing', methods=['POST'])
 def save_db():
     data = request.json
-    data['Дата публикации'] = datetime.date.today()
-    data['Дата исчезновения'] = datetime.date.today()
+    data[KeysEnum.APPEARING_DATE.value] = datetime.date.today()
+    data[KeysEnum.DESAPEAR_DATE.value] = datetime.date.today()
     dataworker = get_dataworker()
     dataworker.data_dict_flatten(data)
     dataworker.add_none_fields(data)
@@ -21,7 +23,7 @@ def save_db():
     dataworker.update_or_past_house_features(data)
     dataworker.update_or_past_listings_static_features(data)
     is_new = dataworker.update_or_past_listings(data)
-    if data['Тип обьявления id'] == 1:
+    if data[KeysEnum.LISTING_TYPE_ID.value] == 1:
         dataworker.update_or_past_listings_sale(data)
     else:
         dataworker.update_or_past_listings_rent(data)
@@ -51,6 +53,13 @@ def get_listing_type_id():
     listing_type = request.args.get('listing_type')
     dataworker = get_dataworker()
     return str(dataworker.get_id_by_condition('Listing_Type', 'listing_type_id', listing_type, 'listing_type_name'))
+
+# @bp.route('/getPriceWindows', methods=['GET'])
+# def get_price_windows():
+#     website_id = request.args.get('website_id')
+#     max_listings = request.args.get('max_listings')
+#     dataworker = get_dataworker()
+#     return str(dataworker.get_price_windows(website_id, max_listings))
 
 @bp.route('/saveImages', methods=['POST'])
 def load_images():
