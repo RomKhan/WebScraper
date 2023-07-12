@@ -49,7 +49,6 @@ class ScraperAbstract:
                 EC.presence_of_element_located((self.by_settings, self.page_load_indicator)))
         except Exception as e:
             #print('i can\'t fully load this page', url)
-            driver.execute_script("window.stop();")
             status = False
 
         try:

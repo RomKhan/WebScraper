@@ -107,22 +107,22 @@ def main():
     # print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
     #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
-    url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=10000000&sort=published&sort_dir=asc&sale_price__gte=100000&offset=0'
+    url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=7000000&sort=price&sort_dir=asc&sale_price__gte=10000&offset=0'
     thread1 = threading.Thread(target=parse_all, args=(
         DomClickScrapeAll, url_domclick_moscow, 'Москва', 'Продажа'))
     thread1.start()
     time.sleep(5)
 
-    url_cian_moscow = 'https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=price_object_order'
-    thread2 = threading.Thread(target=parse_all, args=(
-        CianScrapeAll, url_cian_moscow, 'Москва', 'Продажа'))
-    thread2.start()
-    time.sleep(5)
-
-    url_avito_moscow = 'https://www.avito.ru/moskva/kvartiry/prodam?bt=1&pmax=10000000&pmin=100000&p=1&s=1'
-    thread3 = threading.Thread(target=parse_all, args=(
-        AvitoScrapeAll, url_avito_moscow, 'Москва', 'Продажа'))
-    thread3.start()
+    # url_cian_moscow = 'https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=price_object_order'
+    # thread2 = threading.Thread(target=parse_all, args=(
+    #     CianScrapeAll, url_cian_moscow, 'Москва', 'Продажа'))
+    # thread2.start()
+    # time.sleep(5)
+    #
+    # url_avito_moscow = 'https://www.avito.ru/moskva/kvartiry/prodam?bt=1&pmax=10000000&pmin=100000&p=1&s=1'
+    # thread3 = threading.Thread(target=parse_all, args=(
+    #     AvitoScrapeAll, url_avito_moscow, 'Москва', 'Продажа'))
+    # thread3.start()
 
 
 
@@ -141,8 +141,8 @@ def main():
     # #thread3.start()
 
     thread1.join()
-    thread2.join()
-    thread3.join()
+    # thread2.join()
+    # thread3.join()
     t2 = time.time()
     print(f'work time - {t2 - t1}')
     # data_saver.is_run = False
