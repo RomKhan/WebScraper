@@ -10,7 +10,7 @@ from parsers.DomClickScrapeAll import DomClickScrapeAll
 
 
 def main():
-    server_url = 'http://app:8080'
+    server_url = 'http://db-api-service:8080'
     connected = False
     while not connected:
         try:
@@ -28,12 +28,12 @@ def main():
 
     website_name = os.environ.get('WEBSITE_NAME')
     city = os.environ.get('CITY')
-    if website_name == 'циан':
-        parse_all(CianScrapeAll, url_cian_moscow, city, 'Продажа')
-    elif website_name == 'домклик':
-        parse_all(DomClickScrapeAll, url_domclick_moscow, city, 'Продажа')
-    elif website_name == 'авито':
-        parse_all(AvitoScrapeAll, url_avito_moscow, city, 'Продажа')
+    if website_name == 'cian':
+        parse_all(CianScrapeAll, url_cian_moscow, city, website_name, 'Продажа')
+    elif website_name == 'domclick':
+        parse_all(DomClickScrapeAll, url_domclick_moscow, city, website_name, 'Продажа')
+    elif website_name == 'avito':
+        parse_all(AvitoScrapeAll, url_avito_moscow, city, website_name, 'Продажа')
 
 if __name__ == '__main__':
     main()

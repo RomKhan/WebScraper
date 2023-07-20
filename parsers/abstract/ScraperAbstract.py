@@ -1,11 +1,5 @@
 import logging
-import os
-import random
 from enum import Enum
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium import webdriver
-import undetected_chromedriver as uc
 import requests
 
 from KeysEnum import KeysEnum
@@ -58,7 +52,8 @@ class ScraperAbstract:
         # except:
         #     logging.info('Can\'t execute window.stop();')
         # return status
-        return requests.get(f"{self.chrome_service}/getPage", data={'url': url, 'website': self.website_name})
+        page_source = requests.get(f"{self.chrome_service}/getPage", json={'url': url, 'website': self.website_name}).text
+        return page_source
 
     def parse_if_exists(self, tree, query):
         response = tree.xpath(query)

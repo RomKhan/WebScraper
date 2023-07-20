@@ -24,13 +24,13 @@ def create_app():
 
 
 app = create_app()
+scheduler = APScheduler()
+scheduler.add_job(id='my_job', func=get_image_loader().download_current_state, trigger='interval', seconds=60)
+scheduler.init_app(app)
+scheduler.start()
+atexit.register(teardown_db)
 
 if __name__ == '__main__':
-    atexit.register(teardown_db)
-    scheduler = APScheduler()
-    scheduler.add_job(id='my_job', func=get_image_loader().download_current_state, trigger='interval', seconds=60)
-    scheduler.init_app(app)
-    scheduler.start()
     if not os.path.exists('cian'):
         os.mkdir('cian')
     if not os.path.exists('domclick'):

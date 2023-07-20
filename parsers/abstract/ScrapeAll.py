@@ -42,7 +42,6 @@ class ScrapeAll(ScraperAbstract):
 
     def set_step(self):
         issuie_count = 0
-        page_source = ''
         while True:
             t1 = time.time()
             url = self.get_desk_link()
@@ -89,9 +88,9 @@ class ScrapeAll(ScraperAbstract):
             t1 = time.time()
             page_source = self.get_page(url)
             self.count_of_requests += 1
-            t2 = time.time()
-            if t2 - t1 < self.optimal_timeout:
-                time.sleep(random.randint(self.optimal_timeout - 3, self.optimal_timeout))
+            # t2 = time.time()
+            # if t2 - t1 < self.optimal_timeout:
+            #     time.sleep(random.randint(self.optimal_timeout - 3, self.optimal_timeout))
 
             idx, last_price = self.parse_page(url, content=page_source)
             # if last_price == 0:

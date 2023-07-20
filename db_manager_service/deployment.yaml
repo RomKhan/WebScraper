@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-api-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: db-api-app
+  template:
+    metadata:
+      labels:
+        app: db-api-app
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: 1242241к
+            - name: POSTGRES_DB
+              value: realestatedb
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+        - name: db-api
+          image: stikeyrs/scraper:db-api
+          volumeMounts:
+            - name: images-storage
+              mountPath: /app/images
+      imagePullSecrets:
+        - name: docker-registry-secret
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: images-storage
+        persistentVolumeClaim:
+          claimName: images-pvc

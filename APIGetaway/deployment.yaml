@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-getaway-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: api-getaway-app
+  template:
+    metadata:
+      labels:
+        app: api-getaway-app
+    spec:
+      containers:
+      - name: api-getaway
+        image: stikeyrs/scraper:api_getaway_chrome_driver
+      imagePullSecrets:
+        - name: docker-registry-secret

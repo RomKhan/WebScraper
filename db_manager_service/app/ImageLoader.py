@@ -10,6 +10,7 @@ class ImageLoader:
         self.disk = disk
         self.is_downloading_current_state = False
         self.disk_folder_name = 'temp'
+        self.storage_folder = 'images'
 
         if os.path.exists(f"{self.disk_folder_name}"):
             shutil.rmtree(f"{self.disk_folder_name}")
@@ -72,15 +73,15 @@ class ImageLoader:
     def transform_images(self, data):
         platform_name, i, offer_id, = data
 
-        if not os.path.exists(f"{platform_name}"):
-            os.mkdir(f'{platform_name}')
-        if not os.path.exists(f"{platform_name}/{offer_id}"):
-            os.mkdir(f'{platform_name}/{offer_id}')
+        if not os.path.exists(f"{self.storage_folder}/{platform_name}"):
+            os.mkdir(f'{self.storage_folder}/{platform_name}')
+        if not os.path.exists(f"{self.storage_folder}/{platform_name}/{offer_id}"):
+            os.mkdir(f'{self.storage_folder}/{platform_name}/{offer_id}')
 
         try:
             img = cv2.imread(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
             resize_img = cv2.resize(img, (256, 256))
-            cv2.imwrite(f'{platform_name}/{offer_id}/image_{i}.jpg', resize_img)
+            cv2.imwrite(f'{self.storage_folder}/{platform_name}/{offer_id}/image_{i}.jpg', resize_img)
             os.remove(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
         except Exception as e:
             print(e, f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')

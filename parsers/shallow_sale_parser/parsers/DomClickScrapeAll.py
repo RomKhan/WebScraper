@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class DomClickScrapeAll(ScrapeAll):
-    def __init__(self, url_components, city, listing_type):
+    def __init__(self, url_components, city, website, listing_type):
         ScrapeAll.__init__(self,
                            By.CLASS_NAME,
                            'app main-content',
@@ -20,7 +20,7 @@ class DomClickScrapeAll(ScrapeAll):
                            1000,
                            2000,
                            20,
-                           'Домклик',
+                           website,
                            city,
                            listing_type,
                            8,

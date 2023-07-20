@@ -1,3 +1,6 @@
+import logging
+import time
+
 from KeysEnum import KeysEnum
 
 
@@ -85,7 +88,7 @@ class DataWorker:
     #     cursor.execute(select_query)
     #     values = cursor.fetchone()
 
-    def get_id_by_condition(self, talbe, table_id, condition_value, condition_column):
+    async def get_id_by_condition(self, talbe, table_id, condition_value, condition_column):
         cursor = self.db_connection.cursor()
 
         select_query = f"""
@@ -328,6 +331,25 @@ class DataWorker:
         data['Раздельный санузел'] = DataWorker.type_convert_if_possible(data, 'Раздельный санузел', int)
         data['Лоджия'] = DataWorker.type_convert_if_possible(data, 'Лоджия', int)
         data['Балкон'] = DataWorker.type_convert_if_possible(data, 'Балкон', int)
+
+    async def save_to_db(self, data):
+        self.data_dict_flatten(data)
+        self.add_none_fields(data)
+        self.type_convert(data)
+        if data['Название продаца'] is not None:
+            self.update_or_past_seller(data)
+        self.update_or_past_addres(data)
+        self.update_or_past_house_features(data)
+        self.update_or_past_listings_static_features(data)
+        is_new = self.update_or_past_listings(data)
+        if data[KeysEnum.LISTING_TYPE_ID.value] == 1:
+            self.update_or_past_listings_sale(data)
+        else:
+            self.update_or_past_listings_rent(data)
+
+        if is_new:
+            self.update_or_past_websites_listings_map(data)
+            self.update_or_past_listing_images(data)
 
 
 

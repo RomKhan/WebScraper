@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shallow-sale-parser
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: shallow-sale-parser-cian-moskow
+  template:
+    metadata:
+      labels:
+        app: shallow-sale-parser-cian-moskow
+    spec:
+      containers:
+        - name: shallow-sale-parser-cian-moskow
+          image: stikeyrs/scraper:shallow_sale_parser
+          env:
+            - name: WEBSITE_NAME
+              value: cian
+            - name: CITY
+              value: Москва
+        - name: shallow-sale-parser-domclick-moskow
+          image: stikeyrs/scraper:shallow_sale_parser
+          env:
+            - name: WEBSITE_NAME
+              value: domclick
+            - name: CITY
+              value: Москва
+        - name: shallow-sale-parser-avito-moskow
+          image: stikeyrs/scraper:shallow_sale_parser
+          env:
+            - name: WEBSITE_NAME
+              value: avito
+            - name: CITY
+              value: Москва
+#      restartPolicy: OnFailure  # Политика перезапуска контейнера
+      imagePullSecrets:
+        - name: docker-registry-secret

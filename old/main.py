@@ -5,10 +5,8 @@ import yadisk
 
 import time
 
-from shallow_sale_parser.parsers.AvitoScrapeAll import AvitoScrapeAll
-from shallow_sale_parser.parsers.CianScrapeAll import CianScrapeAll
 from CianScraper import CianScraper
-from shallow_sale_parser.parsers.DomClickScrapeAll import DomClickScrapeAll
+from parsers.shallow_sale_parser.parsers.DomClickScrapeAll import DomClickScrapeAll
 import os
 import shutil
 

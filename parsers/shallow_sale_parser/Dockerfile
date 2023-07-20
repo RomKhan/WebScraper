@@ -29,6 +29,10 @@ RUN mkdir -p /var/chromedriver/
 
 # copy the chromedriver binary, so that it can be patched by undetected_chromedriver
 RUN cp /usr/bin/chromedriver /var/chromedriver/chromedriver_copy
+#ARG WEBSITE_NAME=циан
+#ARG CITY=Москва
+#ENV WEBSITE_NAME=${WEBSITE_NAME}
+#ENV CITY=${CITY}
 
 WORKDIR /app
 CMD ["python", "start.py"]

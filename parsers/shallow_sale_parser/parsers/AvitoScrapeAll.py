@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class AvitoScrapeAll(ScrapeAll):
-    def __init__(self, url_components, city, listing_type):
+    def __init__(self, url_components, city, website, listing_type):
         ScrapeAll.__init__(self,
                            By.CSS_SELECTOR,
                            "span[class^='page-title-count']",
@@ -19,7 +19,7 @@ class AvitoScrapeAll(ScrapeAll):
                            3500,
                            5000,
                            50,
-                           'Авито',
+                           website,
                            city,
                            listing_type,
                            15,
