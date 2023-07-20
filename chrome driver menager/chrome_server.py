@@ -3,6 +3,7 @@ import atexit
 import logging
 import os
 import random
+import signal
 import sys
 import time
 
@@ -14,6 +15,7 @@ from selenium import webdriver
 
 app = Flask(__name__)
 lock = False
+shutdown_flag = False
 # atexit.register(lambda: sys.exit(1))
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
@@ -69,6 +71,12 @@ async def async_get_page():
     #     pass
     time.sleep(10)
 
+@app.before_request
+def check_shutdown():
+    global shutdown_flag
+    if shutdown_flag:
+        os.kill(os.getpid(), signal.SIGINT)
+
 @app.route('/getCooldown', methods=['GET'])
 def get_cooldown():
     website = request.args.get('website')
@@ -116,7 +124,9 @@ async def handle_request():
     except Exception as e:
             # Если возникает исключение, вызываем sys.exit() только внутри функции handle_request()
             logging.error(f'An error occurred: {str(e)}')
-            sys.exit()
+            global shutdown_flag
+            shutdown_flag = True
+            lock = False
 
 
 if __name__ == '__main__':
