@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chrome-driver-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: chrome-driver-app
+  template:
+    metadata:
+      labels:
+        app: chrome-driver-app
+    spec:
+      containers:
+      - name: container
+        image: stikeyrs/scraper:driver-container
+        resources:
+          limits:
+            cpu: "0.7"
+            memory: "700Mi"
+          requests:
+            cpu: "0.2"
+            memory: "256Mi"
+        ports:
+          - containerPort: 8082
+      imagePullSecrets:
+        - name: docker-registry-secret

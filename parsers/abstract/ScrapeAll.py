@@ -40,14 +40,15 @@ class ScrapeAll(ScraperAbstract):
         self.optimal_timeout = optimal_timeout
         self.offers_xpath = offers_xpath
 
-    def set_step(self, driver):
+    def set_step(self):
         issuie_count = 0
+        page_source = ''
         while True:
             t1 = time.time()
             url = self.get_desk_link()
-            self.run_driver_on_page(url, driver)
+            page_source = self.get_page(url)
             self.count_of_requests += 1
-            offers_count = self.get_count_of_offers(driver.page_source)
+            offers_count = self.get_count_of_offers(page_source)
             if offers_count == -1 or self.prev_count_of_lisitngs == offers_count:
                 if issuie_count > 5:
                     break
@@ -63,21 +64,21 @@ class ScrapeAll(ScraperAbstract):
                 time.sleep(random.randint(self.optimal_timeout-3, self.optimal_timeout))
             break
 
-        return offers_count
+        return offers_count, page_source
 
     def reset_iter(self):
         self.prev_price = 0
 
     def iter(self):
         self.current_page = 1
-        driver = self.get_webdriver()
-        offers_count = self.set_step(driver)
+        # driver = self.get_webdriver()
+        offers_count, page_source = self.set_step()
         self.prev_count_of_lisitngs = offers_count
         if self.is_end:
             return
 
         url = self.get_desk_link()
-        self.previous_idx, _ = self.parse_page(url, content=driver.page_source)
+        self.previous_idx, _ = self.parse_page(url, content=page_source)
         self.last_offers_count = offers_count
         self.current_page += 1
         prev_price = self.prev_price
@@ -86,16 +87,16 @@ class ScrapeAll(ScraperAbstract):
             url = self.get_desk_link()
 
             t1 = time.time()
-            self.run_driver_on_page(url, driver)
+            page_source = self.get_page(url)
             self.count_of_requests += 1
             t2 = time.time()
             if t2 - t1 < self.optimal_timeout:
                 time.sleep(random.randint(self.optimal_timeout - 3, self.optimal_timeout))
 
-            idx, last_price = self.parse_page(url, content=driver.page_source)
-            if last_price == 0:
-                time.sleep(5)
-                idx, last_price = self.parse_page(url, content=driver.page_source)
+            idx, last_price = self.parse_page(url, content=page_source)
+            # if last_price == 0:
+            #     time.sleep(5)
+            #     idx, last_price = self.parse_page(url, content=driver.page_source)
 
             idx_diff = len(idx - self.previous_idx)
 
@@ -120,7 +121,7 @@ class ScrapeAll(ScraperAbstract):
                 self.prev_price = prev_price
                 break
 
-        self.delete_webdriver(driver)
+        # self.delete_webdriver(driver)
 
     def update_prev_price(self, new_price):
         self.prev_price = int(new_price)

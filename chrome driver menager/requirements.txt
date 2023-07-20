@@ -1,0 +1,4 @@
+undetected-chromedriver==3.5.0
+selenium==4.10.0
+Flask[async]==2.3.2
+waitress

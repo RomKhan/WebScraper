@@ -25,7 +25,7 @@ class Scraper(ScraperAbstract):
                 self.is_first_run = False
                 break
             url = self.get_desk_link()
-            self.run_driver_on_page(url, driver)
+            self.get_page(url, driver)
             soup = self.get_soap(driver.page_source)
             links = self.get_offer_links(soup)
             idx = set(links.keys())
