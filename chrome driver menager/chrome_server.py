@@ -91,12 +91,15 @@ def get_cooldown():
 async def handle_request():
     url = request.json['url']
     website = request.json['website']
+    global lock
+    global shutdown_flag
     try:
         t1 = time.time()
 
-        global lock
         while lock:
-            await asyncio.sleep(0.5)
+            if shutdown_flag:
+                return '<html><head></head><body><h1>error</h1></body></html>'
+            await asyncio.sleep(1)
         lock = True
         driver.switch_to.new_window('tab')
         current_tab = driver.current_window_handle
@@ -108,7 +111,9 @@ async def handle_request():
         await asyncio.sleep(10)
 
         while lock:
-            await asyncio.sleep(0.5)
+            if shutdown_flag:
+                return '<html><head></head><body><h1>error</h1></body></html>'
+            await asyncio.sleep(1)
         lock = True
         driver.switch_to.window(current_tab)
         driver.execute_script('window.stop;')
@@ -124,9 +129,9 @@ async def handle_request():
     except Exception as e:
             # Если возникает исключение, вызываем sys.exit() только внутри функции handle_request()
             logging.error(f'An error occurred: {str(e)}')
-            global shutdown_flag
             shutdown_flag = True
             lock = False
+            return '<html><head></head><body><h1>error</h1></body></html>'
 
 
 if __name__ == '__main__':
