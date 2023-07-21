@@ -43,7 +43,6 @@ class ScrapeAll(ScraperAbstract):
     def set_step(self):
         issuie_count = 0
         while True:
-            t1 = time.time()
             url = self.get_desk_link()
             page_source = self.get_page(url)
             self.count_of_requests += 1
@@ -53,14 +52,10 @@ class ScrapeAll(ScraperAbstract):
                     break
                 else:
                     issuie_count += 1
-                    time.sleep(self.optimal_timeout-3)
                     continue
             if offers_count == 0 and self.last_offers_count != 0:
                 self.is_end = True
                 break
-            t2 = time.time()
-            if t2-t1 < self.optimal_timeout:
-                time.sleep(random.randint(self.optimal_timeout-3, self.optimal_timeout))
             break
 
         return offers_count, page_source
@@ -86,7 +81,9 @@ class ScrapeAll(ScraperAbstract):
             url = self.get_desk_link()
 
             t1 = time.time()
+            logging.info('Send Request')
             page_source = self.get_page(url)
+            logging.info('Get page')
             self.count_of_requests += 1
             # t2 = time.time()
             # if t2 - t1 < self.optimal_timeout:
@@ -116,7 +113,7 @@ class ScrapeAll(ScraperAbstract):
                 f'url: {url}'
             )
 
-            if idx_diff == 0 and last_price > 0:
+            if idx_diff == 0:
                 self.prev_price = prev_price
                 break
 

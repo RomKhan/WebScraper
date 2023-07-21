@@ -1,7 +1,6 @@
 import logging
 from enum import Enum
 import requests
-
 from KeysEnum import KeysEnum
 
 
