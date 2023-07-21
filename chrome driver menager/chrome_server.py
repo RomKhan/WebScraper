@@ -116,7 +116,6 @@ async def handle_request():
     websites[website] = time.time()
     try:
         t1 = time.time()
-        d = 2 / 0
 
         while lock:
             if shutdown_flag:
