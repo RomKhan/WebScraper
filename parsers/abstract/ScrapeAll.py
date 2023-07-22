@@ -1,4 +1,5 @@
 import random
+import threading
 import time
 
 from lxml import html
@@ -13,32 +14,24 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 class ScrapeAll(ScraperAbstract):
     def __init__(self,
-                 by_settings,
-                 page_load_indicator,
                  url_components,
-                 min_offers,
-                 max_offers,
-                 offers_per_page,
                  website_name,
                  city,
                  listing_type,
-                 optimal_timeout,
                  offers_xpath):
-        ScraperAbstract.__init__(self, by_settings, page_load_indicator, website_name, city, listing_type, 10)
+        ScraperAbstract.__init__(self, website_name, city, listing_type)
         self.url_components = url_components
         self.prev_price = 0
-        self.min_offers = min_offers
-        self.max_offers = max_offers
-        self.offers_per_page = offers_per_page
+        self.current_price = 0
         self.last_offers_count = 0
         self.is_end = False
 
         self.count_of_parsed = 0
-        self.count_of_requests = 0
         self.count_of_corrupted = 0
         self.prev_count_of_lisitngs = -1
-        self.optimal_timeout = optimal_timeout
         self.offers_xpath = offers_xpath
+        self.status = True
+        self.url_queue = []
 
     def set_step(self):
         issuie_count = 0
@@ -63,46 +56,25 @@ class ScrapeAll(ScraperAbstract):
     def reset_iter(self):
         self.prev_price = 0
 
-    def iter(self):
-        self.current_page = 1
-        # driver = self.get_webdriver()
-        offers_count, page_source = self.set_step()
-        self.prev_count_of_lisitngs = offers_count
-        if self.is_end:
-            return
-
-        url = self.get_desk_link()
-        self.previous_idx, _ = self.parse_page(url, content=page_source)
-        self.last_offers_count = offers_count
-        self.current_page += 1
-        prev_price = self.prev_price
-
-        while offers_count > 0:
-            url = self.get_desk_link()
-
-            t1 = time.time()
-            logging.info('Send Request')
-            page_source = self.get_page(url)
-            logging.info('Get page')
-            self.count_of_requests += 1
-            # t2 = time.time()
-            # if t2 - t1 < self.optimal_timeout:
-            #     time.sleep(random.randint(self.optimal_timeout - 3, self.optimal_timeout))
-
+    def get_and_parse_page(self, url, attempts, page, pod, key):
+        t1 = time.time()
+        page_source, self.status = self.get_page(url, pod, key)
+        if self.status:
             idx, last_price = self.parse_page(url, content=page_source)
-            # if last_price == 0:
-            #     time.sleep(5)
-            #     idx, last_price = self.parse_page(url, content=driver.page_source)
+            if len(self.previous_idx) == 0 and page == 1:
+                self.previous_idx = idx
+
+            if last_price is not None and last_price > self.current_price:
+                self.current_price = last_price
 
             idx_diff = len(idx - self.previous_idx)
-
-            if last_price is not None and last_price > prev_price:
-                prev_price = last_price
-
-            if self.current_page < 3:
-                idx_diff = 1
-
-            self.current_page += 1
+            if idx_diff == 0 and page > 1:
+                self.prev_price = self.current_price
+                offers_count = self.get_count_of_offers(page_source)
+                if offers_count == 0 and self.last_offers_count != 0:
+                    self.is_end = True
+                if offers_count > -1:
+                    self.last_offers_count = offers_count
 
             t2 = time.time()
             logging.info(
@@ -112,12 +84,35 @@ class ScrapeAll(ScraperAbstract):
                 f'Can\'t parse {self.count_of_corrupted} offers, '
                 f'url: {url}'
             )
+        else:
+            self.url_queue.append([url, attempts + 1, page])
 
-            if idx_diff == 0:
-                self.prev_price = prev_price
-                break
 
-        # self.delete_webdriver(driver)
+
+    def iter(self):
+        self.current_page = 1
+        start_price = self.prev_price
+        while self.prev_price == start_price:
+            pods = self.reserve_pods()
+            if pods is None:
+                time.sleep(5)
+                continue
+            for pod in pods:
+                url = self.get_desk_link()
+                attempts = 0
+                page = self.current_page
+                self.current_page += 1
+                if len(self.url_queue) > 0:
+                    url_temp, attempts_temp, page_temp = self.url_queue.pop(0)
+                    if attempts < 5:
+                        url = url_temp
+                        attempts = attempts_temp
+                        page = page_temp
+                        self.current_page -= 1
+
+                thread = threading.Thread(target=self.get_and_parse_page, args=(url, attempts, page, pod[0], pod[1]))
+                thread.start()
+
 
     def update_prev_price(self, new_price):
         self.prev_price = int(new_price)

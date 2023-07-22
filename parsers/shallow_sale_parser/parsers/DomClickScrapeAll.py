@@ -14,16 +14,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class DomClickScrapeAll(ScrapeAll):
     def __init__(self, url_components, city, website, listing_type):
         ScrapeAll.__init__(self,
-                           By.CLASS_NAME,
-                           'app main-content',
                            url_components,
-                           1000,
-                           2000,
-                           20,
                            website,
                            city,
                            listing_type,
-                           8,
                            offers_xpath='//div[@data-e2e-id="offers-list__item"]')
 
     def parse_offer(self, offer):

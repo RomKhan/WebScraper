@@ -4,6 +4,7 @@ import logging
 import os
 import random
 import signal
+import string
 import subprocess
 import sys
 import time
@@ -73,7 +74,7 @@ async def async_get_page(website):
         if website == 'cian':
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
         elif website == 'domclick':
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'main')))
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'noscript')))
         elif website == 'avito':
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
     except:
@@ -106,25 +107,51 @@ def get_cooldown():
         return '10000'
 
 
+@app.route('/tryReserve', methods=['GET'])
+def try_reserve():
+    website = request.args.get('website')
+    cooldown = request.args.get('cooldown')
+    key = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+    global websites
+    if website in websites:
+        if time.time() - websites[website][0] >= float(cooldown):
+            websites[website][2] = key
+            websites[website][1] = True
+            websites[website][0] = time.time()
+            return {'key': f'{key}'}, 200
+    else:
+        websites[website] = [time.time(), True, key]
+        return {'key': f'{key}'}, 200
+
+    return {'message': 'not reserved'}, 503
+
+
 @app.route('/getPage', methods=['GET'])
 async def handle_request():
     url = request.json['url']
     website = request.json['website']
+    key = request.json['key']
+
+    global websites
+    if website not in websites:
+        return {"message": "not reserved"}, 503
+    if websites[website][2] != key:
+        return {"message": "wrong pod key"}, 503
+
     global lock
     global shutdown_flag
-    global websites
-    websites[website] = time.time()
+    websites[website][0] = time.time()
     try:
         t1 = time.time()
 
         while lock:
             if shutdown_flag:
-                return '<html><head></head><body><h1>error</h1></body></html>'
+                return '<html><head></head><body><h1>error</h1></body></html>', 503
             await asyncio.sleep(1)
         lock = True
         driver.switch_to.new_window('tab')
         current_tab = driver.current_window_handle
-        websites[website] = time.time()
+        websites[website][0] = time.time()
         driver.get(url)
         lock = False
 
@@ -132,20 +159,21 @@ async def handle_request():
 
         while lock:
             if shutdown_flag:
-                return '<html><head></head><body><h1>error</h1></body></html>'
+                return '<html><head></head><body><h1>error</h1></body></html>', 503
             await asyncio.sleep(1)
         lock = True
         driver.switch_to.window(current_tab)
         driver.execute_script('window.stop;')
-        page_source = driver.page_source
+        page_source = driver.find_element(By.TAG_NAME, 'body').get_attribute("outerHTML")
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
+        websites[website][1] = False
         lock = False
 
         t2 = time.time()
         logging.info(f"{t2 - t1}, {website}")
 
-        return page_source
+        return page_source, 200
     except Exception as e:
             # Если возникает исключение, вызываем sys.exit() только внутри функции handle_request()
             logging.error(f'An error occurred: {str(e)}')
@@ -153,7 +181,7 @@ async def handle_request():
             shutdown_gunicorn()
             shutdown_docker()
             lock = False
-            return '<html><head></head><body><h1>error</h1></body></html>'
+            return '<html><head></head><body><h1>error</h1></body></html>', 503
 
 
 if __name__ == '__main__':

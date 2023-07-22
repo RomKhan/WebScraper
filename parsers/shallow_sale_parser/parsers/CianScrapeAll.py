@@ -14,16 +14,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class CianScrapeAll(ScrapeAll):
     def __init__(self, url_components, city, website, listing_type):
         ScrapeAll.__init__(self,
-                           By.XPATH,
-                           '//div[@data-name="SummaryHeader"]',
                            url_components,
-                           700,
-                           1500,
-                           28,
                            website,
                            city,
                            listing_type,
-                           10,
                            offers_xpath='//article[@data-name="CardComponent"]')
 
     def parse_offer(self, offer):

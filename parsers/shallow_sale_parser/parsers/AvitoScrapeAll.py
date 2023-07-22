@@ -13,16 +13,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class AvitoScrapeAll(ScrapeAll):
     def __init__(self, url_components, city, website, listing_type):
         ScrapeAll.__init__(self,
-                           By.CSS_SELECTOR,
-                           "span[class^='page-title-count']",
                            url_components,
-                           3500,
-                           5000,
-                           50,
                            website,
                            city,
                            listing_type,
-                           15,
                            offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]")
 
     def parse_offer(self, offer):

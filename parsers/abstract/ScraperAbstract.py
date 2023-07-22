@@ -10,10 +10,7 @@ class ListingMode(Enum):
 
 
 class ScraperAbstract:
-    def __init__(self, by_settings, page_load_indicator, website_name, city, listing_type, page_load_timeout=150):
-        self.by_settings = by_settings
-        self.page_load_indicator = page_load_indicator
-        self.page_load_timeout = page_load_timeout
+    def __init__(self, website_name, city, listing_type):
         self.WINDOW_SIZE = "1920,1080"
         self.current_page = 1
         self.db_flow_url = 'http://db-api-service:8080/db'
@@ -23,36 +20,32 @@ class ScraperAbstract:
         self.city_db_id = requests.get(self.db_flow_url+'/getCityId', params={'city': city}).text
         self.listing_type_db_id = requests.get(self.db_flow_url+'/getListingTypeId', params={'listing_type': listing_type}).text
         self.previous_idx = set()
-        # self.useragents = [
-        #     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15',
-        #     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.3',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-        #     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.3',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        #     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 YaBrowser/23.5.2.625 Yowser/2.5 Safari/537.36',
-        #     'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 YaBrowser/20.12.2.105 Yowser/2.5 Safari/537.36'
-        # ]
+        self.count_of_requests = 0
 
-    def get_page(self, url):
-        # status = True
-        # try:
-        #     driver.get(url)
-        #     WebDriverWait(driver, timeout=self.page_load_timeout).until(
-        #         EC.presence_of_element_located((self.by_settings, self.page_load_indicator)))
-        # except Exception as e:
-        #     #print('i can\'t fully load this page', url)
-        #     status = False
-        #
-        # try:
-        #     driver.execute_script("window.stop();")
-        # except:
-        #     logging.info('Can\'t execute window.stop();')
-        # return status
-        page_source = requests.get(f"{self.chrome_service}/getPage", json={'url': url, 'website': self.website_name}).text
-        return page_source
+    def reserve_pods(self):
+        response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
+        if response.status_code == 200:
+            data = response.json()
+            pods = []
+            for i in range(len(data['pods'])):
+                pods.append((data['pods'][i], data['keys'][i]))
+            return pods
+        else:
+            return None
+
+
+    def get_page(self, url, pod, key):
+        response = requests.get(f"{self.chrome_service}/getPage", json={
+            'url': url, 'website': self.website_name, 'pod_id': pod, 'key': key})
+        self.count_of_requests += 1
+        status = True
+        page_source = None
+        if response.status_code == 200 or 201:
+            page_source = response.text
+        else:
+            status = False
+
+        return page_source, status
 
     def parse_if_exists(self, tree, query):
         response = tree.xpath(query)
