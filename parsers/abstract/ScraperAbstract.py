@@ -24,14 +24,12 @@ class ScraperAbstract:
 
     def reserve_pods(self):
         response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
+        pods = []
         if response.status_code == 200:
             data = response.json()
-            pods = []
             for i in range(len(data['pods'])):
                 pods.append((data['pods'][i], data['keys'][i]))
-            return pods
-        else:
-            return None
+        return pods
 
 
     def get_page(self, url, pod, key):

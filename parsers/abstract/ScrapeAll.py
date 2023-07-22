@@ -94,7 +94,7 @@ class ScrapeAll(ScraperAbstract):
         start_price = self.prev_price
         while self.prev_price == start_price:
             pods = self.reserve_pods()
-            if pods is None:
+            if len(pods) == 0:
                 time.sleep(5)
                 continue
             for pod in pods:
