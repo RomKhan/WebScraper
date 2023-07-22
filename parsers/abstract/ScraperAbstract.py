@@ -23,25 +23,31 @@ class ScraperAbstract:
         self.count_of_requests = 0
 
     def reserve_pods(self):
-        response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
         pods = []
-        if response.status_code == 200:
-            data = response.json()
-            for i in range(len(data['pods'])):
-                pods.append((data['pods'][i], data['keys'][i]))
+        try:
+            response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
+            if response.status_code == 200:
+                data = response.json()
+                for i in range(len(data['pods'])):
+                    pods.append((data['pods'][i], data['keys'][i]))
+        except:
+            pass
         return pods
 
 
     def get_page(self, url, pod, key):
-        response = requests.get(f"{self.chrome_service}/getPage", json={
-            'url': url, 'website': self.website_name, 'pod_id': pod, 'key': key})
-        self.count_of_requests += 1
         status = True
         page_source = None
-        if response.status_code == 200 or 201:
-            page_source = response.text
-        else:
-            status = False
+        try:
+            response = requests.get(f"{self.chrome_service}/getPage", json={
+                'url': url, 'website': self.website_name, 'pod_id': pod, 'key': key})
+            self.count_of_requests += 1
+            if response.status_code == 200 or 201:
+                page_source = response.text
+            else:
+                status = False
+        except:
+            pass
 
         return page_source, status
 
