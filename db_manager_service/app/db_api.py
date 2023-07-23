@@ -11,11 +11,12 @@ bp = Blueprint("db", __name__, url_prefix="/db")
 
 @bp.route('/saveListing', methods=['POST'])
 async def save_db():
-    data = request.json
-    data[KeysEnum.APPEARING_DATE.value] = datetime.date.today()
-    data[KeysEnum.DESAPEAR_DATE.value] = datetime.date.today()
-    dataworker = get_dataworker()
-    await dataworker.save_to_db(data)
+    offers = request.json['offers']
+    for offer in offers:
+        offer[KeysEnum.APPEARING_DATE.value] = datetime.date.today()
+        offer[KeysEnum.DESAPEAR_DATE.value] = datetime.date.today()
+        dataworker = get_dataworker()
+        await dataworker.save_to_db(offer)
 
     return 'Data saved successfully'
 

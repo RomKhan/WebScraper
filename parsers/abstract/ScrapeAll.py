@@ -120,6 +120,7 @@ class ScrapeAll(ScraperAbstract):
     def parse_page(self, link, content):
         t1_test = time.time()
         tree = html.fromstring(content)
+        offers_dict = []
         idx = set()
         last_price = 0
 
@@ -134,11 +135,12 @@ class ScrapeAll(ScraperAbstract):
                     continue
                 idx.add(id)
                 last_price = int(data[KeysEnum.PRICE.value])
-                self.to_database(data)
+                offers_dict.append(data)
             except Exception as e:
                 print(e, link)
 
         self.count_of_parsed += len(offers) - corrupt_offers
+        self.to_database(offers_dict)
         t2_test = time.time()
         logging.info(t2_test - t1_test)
         return idx, last_price
