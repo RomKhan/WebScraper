@@ -65,6 +65,10 @@ driver = uc.Chrome(options=options,
 websites = dict()
 
 
+@app.route("/ping")
+def ping():
+    return "I AM OK!", 200
+
 async def async_get_page(website):
     # tabs_before = driver.window_handles
     # driver.get(url)

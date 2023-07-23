@@ -22,12 +22,18 @@ async def send_async_request_html(url, params=None, data=None):
             status = response.status
             return response_text, status
 
+
 async def send_async_request_json(url, params=None, data=None):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params, json=data) as response:
             response_json = await response.json()
             status = response.status
             return response_json, status
+
+
+@app.route("/ping")
+def ping():
+    return "I AM OK!", 200
 
 
 @app.route('/reservePod', methods=['GET'])

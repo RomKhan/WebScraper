@@ -30,6 +30,15 @@ spec:
           volumeMounts:
             - name: images-storage
               mountPath: /app/images
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /ping  # Путь, который будет использоваться для проверки "живости" контейнера
+              port: 8080  # Порт, на котором работает ваше приложение
+            initialDelaySeconds: 30  # Задержка перед первой проверкой (в секундах)
+            periodSeconds: 20  # Периодичность проверок "живости" (в секундах)
+            failureThreshold: 3  # Количество неудачных проверок перед перезапуском
       imagePullSecrets:
         - name: docker-registry-secret
       volumes:

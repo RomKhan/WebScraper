@@ -36,7 +36,7 @@ class ScraperAbstract:
 
 
     def get_page(self, url, pod, key):
-        status = True
+        status = False
         page_source = None
         try:
             response = requests.get(f"{self.chrome_service}/getPage", json={
@@ -44,8 +44,7 @@ class ScraperAbstract:
             self.count_of_requests += 1
             if response.status_code == 200 or 201:
                 page_source = response.text
-            else:
-                status = False
+                status = True
         except:
             pass
 

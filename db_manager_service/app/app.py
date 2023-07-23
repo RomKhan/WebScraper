@@ -18,7 +18,7 @@ def create_app():
 
     @app.route("/ping")
     def ping():
-        return "OK!"
+        return "I AM OK!", 200
 
     return app
 

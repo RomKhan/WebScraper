@@ -15,5 +15,14 @@ spec:
       containers:
       - name: api-getaway
         image: stikeyrs/scraper:api_getaway_chrome_driver
+        ports:
+          - containerPort: 8083
+        livenessProbe:
+          httpGet:
+            path: /ping  # Путь, который будет использоваться для проверки "живости" контейнера
+            port: 8083  # Порт, на котором работает ваше приложение
+          initialDelaySeconds: 30  # Задержка перед первой проверкой (в секундах)
+          periodSeconds: 60  # Периодичность проверок "живости" (в секундах)
+          failureThreshold: 5  # Количество неудачных проверок перед перезапуском
       imagePullSecrets:
         - name: docker-registry-secret
