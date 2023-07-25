@@ -13,10 +13,9 @@ bp = Blueprint("db", __name__, url_prefix="/db")
 async def save_db():
     offers = request.json['offers']
     for offer in offers:
-        offer[KeysEnum.APPEARING_DATE.value] = datetime.date.today()
         offer[KeysEnum.DESAPEAR_DATE.value] = datetime.date.today()
-        dataworker = get_dataworker()
-        await dataworker.save_to_db(offer)
+    dataworker = get_dataworker()
+    await dataworker.save_to_db(offers)
 
     return 'Data saved successfully'
 

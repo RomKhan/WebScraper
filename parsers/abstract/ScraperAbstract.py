@@ -1,5 +1,7 @@
 import logging
 from enum import Enum
+
+import aiohttp
 import requests
 from KeysEnum import KeysEnum
 
@@ -95,13 +97,15 @@ class ScraperAbstract:
     def get_soap(self, content):
         pass
 
-    def to_database(self, offers):
+    async def to_database(self, offers):
         for offer in offers:
             offer[KeysEnum.WEBSITE_ID.value] = self.website_db_id
             offer[KeysEnum.CITY_ID.value] = self.city_db_id
             offer[KeysEnum.LISTING_TYPE_ID.value] = self.listing_type_db_id
 
-        requests.post(self.db_flow_url+'/saveListing', json={'offers': offers})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self.db_flow_url+'/saveListing', json={'offers': offers}) as response:
+                pass
 
     # def delete_webdriver(self, driver):
     #     driver.close()

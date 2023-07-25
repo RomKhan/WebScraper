@@ -115,172 +115,248 @@ class DataWorker:
             cursor.close()
             return values[0]
 
-    def get_if_exist(self, id, id_name, table_name):
+    # def get_if_exist(self, id, id_name, table_name):
+    #     cursor = self.db_connection.cursor()
+    #     select_query = f"""
+    #                 SELECT * FROM {table_name} WHERE {id_name}='{id}'
+    #             """
+    #     cursor.execute(select_query)
+    #     values = cursor.fetchone()
+    #
+    #     if values is not None:
+    #         columns = [desc[0] for desc in cursor.description]
+    #         values = dict(zip(columns, values))
+    #
+    #     cursor.close()
+    #
+    #     return values
+    #
+    # def instert_to_db(self, new_record, table_name):
+    #     cursor = self.db_connection.cursor()
+    #     keys = list(new_record.keys())
+    #     values = list(new_record.values())
+    #     insert_query = f'INSERT INTO {table_name} ({", ".join(keys)}) VALUES ({", ".join(["%s"] * len(keys))})'
+    #     record_to_insert = tuple(values)
+    #     cursor.execute(insert_query, record_to_insert)
+    #     self.db_connection.commit()
+    #     cursor.close()
+    #
+    # def update_record_db(self, record, new_record, id_name, table_name, history_keys = None):
+    #     id = record[id_name]
+    #     for key in list(new_record.keys()):
+    #         if record[key] == new_record[key] or new_record[key] == None or key in self.not_changed_keys:
+    #             new_record.pop(key)
+    #             if history_keys is not None and record[key] == None and key in history_keys:
+    #                 history_keys.remove(key)
+    #
+    #     keys = list(new_record.keys())
+    #     values = list(new_record.values())
+    #     values.append(id)
+    #     if history_keys is not None:
+    #         history_id = history_keys[0]
+    #         history_keys = list(set(keys) & set(history_keys))
+    #
+    #     if len(new_record) > 0:
+    #         cursor = self.db_connection.cursor()
+    #         update_query = f'UPDATE {table_name} SET {", ".join([f"{keys[i]} = %s" for i in range(len(keys))])} WHERE {id_name} = %s'
+    #         data = tuple(values)
+    #         cursor.execute(update_query, data)
+    #         self.db_connection.commit()
+    #         if history_keys is not None and len(history_keys) > 0:
+    #             values = [new_record[key] for key in history_keys]
+    #             history_keys.append(history_id)
+    #             values.append(id)
+    #             insert_query = f'INSERT INTO {table_name}_Changes ({", ".join(history_keys)}) VALUES ({", ".join(["%s"] * len(history_keys))})'
+    #             data = tuple(values)
+    #             cursor.execute(insert_query, data)
+    #             self.db_connection.commit()
+    #         cursor.close()
+
+    def update_or_past(self, keys, new_records, id_name, table_name, history_keys = None):
         cursor = self.db_connection.cursor()
-        select_query = f"""
-                    SELECT * FROM {table_name} WHERE {id_name}='{id}'
-                """
-        cursor.execute(select_query)
-        values = cursor.fetchone()
+        idx_all = set([row[0] for row in new_records])
+        existed_rows = []
+        if history_keys is not None:
+            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} IN %s ORDER BY {id_name}"
+            cursor.execute(select_query, (tuple(idx_all),))
+            existed_rows = cursor.fetchall()
+        idx_exists = set([row[0] for row in existed_rows])
 
-        if values is not None:
-            columns = [desc[0] for desc in cursor.description]
-            values = dict(zip(columns, values))
+        insert_query = f"""INSERT INTO {table_name} ({", ".join(keys)})
+                              VALUES ({", ".join(["%s"] * len(keys))})
+                              ON CONFLICT ({id_name}) DO
+                              UPDATE SET {", ".join([f"{key} = EXCLUDED.{key}" for key in keys])}"""
+        cursor.executemany(insert_query, new_records)
 
-        cursor.close()
+        if history_keys is not None and len(existed_rows) > 0:
+            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} IN %s ORDER BY {id_name}"
+            cursor.execute(select_query, (tuple(idx_exists),))
+            updated_rows = cursor.fetchall()
 
-        return values
+            filter_updated_rows = []
+            for i in range(len(existed_rows)):
+                is_updated = updated_rows[i] == existed_rows[i]
+                if not is_updated:
+                    filter_updated_rows.append(existed_rows[i])
 
-    def instert_to_db(self, new_record, table_name):
-        cursor = self.db_connection.cursor()
-        keys = list(new_record.keys())
-        values = list(new_record.values())
-        insert_query = f'INSERT INTO {table_name} ({", ".join(keys)}) VALUES ({", ".join(["%s"] * len(keys))})'
-        record_to_insert = tuple(values)
-        cursor.execute(insert_query, record_to_insert)
+            if len(filter_updated_rows) > 0:
+                insert_changes_query = f"""INSERT INTO {table_name}_Changes ({", ".join(history_keys)})
+                                              VALUES ({", ".join(["%s"] * len(history_keys))})"""
+                cursor.executemany(insert_changes_query, filter_updated_rows)
+
         self.db_connection.commit()
         cursor.close()
-
-    def update_record_db(self, record, new_record, id_name, table_name, history_keys = None):
-        id = record[id_name]
-        for key in list(new_record.keys()):
-            if record[key] == new_record[key] or new_record[key] == None or key in self.not_changed_keys:
-                new_record.pop(key)
-                if history_keys is not None and record[key] == None and key in history_keys:
-                    history_keys.remove(key)
-
-        keys = list(new_record.keys())
-        values = list(new_record.values())
-        values.append(id)
-        if history_keys is not None:
-            history_id = history_keys[0]
-            history_keys = list(set(keys) & set(history_keys))
-
-        if len(new_record) > 0:
-            cursor = self.db_connection.cursor()
-            update_query = f'UPDATE {table_name} SET {", ".join([f"{keys[i]} = %s" for i in range(len(keys))])} WHERE {id_name} = %s'
-            data = tuple(values)
-            cursor.execute(update_query, data)
-            self.db_connection.commit()
-            if history_keys is not None and len(history_keys) > 0:
-                values = [new_record[key] for key in history_keys]
-                history_keys.append(history_id)
-                values.append(id)
-                insert_query = f'INSERT INTO {table_name}_Changes ({", ".join(history_keys)}) VALUES ({", ".join(["%s"] * len(history_keys))})'
-                data = tuple(values)
-                cursor.execute(insert_query, data)
-                self.db_connection.commit()
-            cursor.close()
-
-    def update_or_past(self, new_record, id_name, table_name, history_keys = None):
-        record = self.get_if_exist(new_record[id_name], id_name, table_name)
-        if record is None and new_record[id_name] is not None:
-            self.instert_to_db(new_record, table_name)
-            return True
-        elif new_record[id_name] is not None:
-            self.update_record_db(record, new_record, id_name, table_name, history_keys)
-            return False
+        return idx_all - idx_exists
 
     def update_or_past_seller(self, data):
-        record = {
-            KeysEnum.SELLER_NAME.value: data['Название продаца'],
-            KeysEnum.SELLER_TYPE.value: data['Тип продаца'],
-        }
-        return self.update_or_past(record, KeysEnum.SELLER_NAME.value, 'Sellers')
+        records = []
+        keys = [KeysEnum.SELLER_NAME.value, KeysEnum.SELLER_TYPE.value]
+        for offer in data:
+            records.append((offer['Название продаца'], offer['Тип продаца']))
+        return self.update_or_past(keys, records, KeysEnum.SELLER_NAME.value, 'Sellers')
+
 
     def update_or_past_addres(self, data):
-        record = {
-            KeysEnum.ADDRES.value: data['Адресс'],
-            KeysEnum.CITY_ID.value: data[KeysEnum.CITY_ID.value]
-        }
-        return self.update_or_past(record, KeysEnum.ADDRES.value, 'Address')
+        records = []
+        keys = [KeysEnum.ADDRES.value, KeysEnum.CITY_ID.value]
+        for offer in data:
+            records.append((offer['Адресс'], offer[KeysEnum.CITY_ID.value]))
+
+        return self.update_or_past(keys, records, KeysEnum.ADDRES.value, 'Address')
 
     def update_or_past_house_features(self, data):
-        record = {
-            KeysEnum.ADDRES.value: data['Адресс'],
-            KeysEnum.MAX_FLOOR.value: data['Этажей в доме'],
-            KeysEnum.HOUSE_SERIE.value: data['Строительная серия'],
-            KeysEnum.PASSENGER_ELEVATOR_COUNT.value: data['Пассажирский лифт'],
-            KeysEnum.FREIGHT_ELEVATOR_COUNT.value: data['Грузовой лифт'],
-            KeysEnum.PARKING_TYPE.value: data['Парковка'],
-            KeysEnum.ENTRANCE_COUNT.value: data['Подъезды'],
-            KeysEnum.IS_DERELICTED.value: data['Аварийность'],
-            KeysEnum.HOUSE_TYPE.value: data['Тип дома'],
-            KeysEnum.GAS_SUPPLY_TYPE.value: data['Газоснабжение'],
-            KeysEnum.IS_CHUTE.value: data['Мусоропровод'],
-            KeysEnum.END_BUILD_YEAR.value: data['Год постройки'] if data['Год постройки'] is not None else data['Год сдачи'],
-            KeysEnum.FLOORING_TYPE.value: data['Тип перекрытий'],
-            KeysEnum.HOUSE_STATUS.value: data['Дом'],
-            KeysEnum.RESIDENTIAL_COMPLEX_NAME.value: data['Название ЖК'],
-        }
+        records = []
+        keys = [KeysEnum.ADDRES.value,
+                KeysEnum.MAX_FLOOR.value,
+                KeysEnum.HOUSE_SERIE.value,
+                KeysEnum.PASSENGER_ELEVATOR_COUNT.value,
+                KeysEnum.FREIGHT_ELEVATOR_COUNT.value,
+                KeysEnum.PARKING_TYPE.value,
+                KeysEnum.ENTRANCE_COUNT.value,
+                KeysEnum.IS_DERELICTED.value,
+                KeysEnum.HOUSE_TYPE.value,
+                KeysEnum.GAS_SUPPLY_TYPE.value,
+                KeysEnum.IS_CHUTE.value,
+                KeysEnum.END_BUILD_YEAR.value,
+                KeysEnum.FLOORING_TYPE.value,
+                KeysEnum.HOUSE_STATUS.value,
+                KeysEnum.RESIDENTIAL_COMPLEX_NAME.value
+                ]
+        for offer in data:
+            records.append((offer['Адресс'],
+                            offer['Этажей в доме'],
+                            offer['Строительная серия'],
+                            offer['Пассажирский лифт'],
+                            offer['Грузовой лифт'],
+                            offer['Парковка'],
+                            offer['Подъезды'],
+                            offer['Аварийность'],
+                            offer['Тип дома'],
+                            offer['Газоснабжение'],
+                            offer['Мусоропровод'],
+                            offer['Год постройки'] if offer['Год постройки'] is not None else offer['Год сдачи'],
+                            offer['Тип перекрытий'],
+                            offer['Дом'],
+                            offer['Название ЖК'],
+                            ))
         history_keys = [KeysEnum.ADDRES.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
-        return self.update_or_past(record, KeysEnum.ADDRES.value, 'House_Features', history_keys)
+        return self.update_or_past(keys, records, KeysEnum.ADDRES.value, 'House_Features', history_keys)
 
     def update_or_past_listings_static_features(self, data):
-        record = {
-            KeysEnum.LISTINGS_STATIC_FEATURES_ID.value: data[KeysEnum.LISTING_ID.value],
-            KeysEnum.LISTING_TYPE_ID.value: data[KeysEnum.LISTING_TYPE_ID.value],
-            KeysEnum.ADDRES.value: data['Адресс'],
-            KeysEnum.ROOM_COUNT.value: data['Число комнат'],
-            KeysEnum.PROPERTY_TYPE.value: data['Тип жилья'],
-            KeysEnum.TOTAL_AREA.value: data['Общая площадь'],
-            KeysEnum.LIVING_AREA.value: data['Жилая площадь'],
-            KeysEnum.KITCHEN_AREA.value: data['Площадь кухни'],
-            KeysEnum.APARTMENT_FLOOR.value: data['Этаж квартиры'],
-            KeysEnum.CEILING_HEIGHT.value: data['Высота потолков'],
-            KeysEnum.WINDOW_VIEW.value: data['Вид из окон'],
-            KeysEnum.RENOVATION.value: data['Ремонт'],
-            KeysEnum.HEATING_TYPE.value: data['Отопление'],
-            KeysEnum.COMBINED_BATHROOM_COUNT.value: data['Совмещенный санузел'],
-            KeysEnum.SEPARATE_BATHROOM_COUNT.value: data['Раздельный санузел'],
-            KeysEnum.LOGGIA_COUNT.value: data['Лоджия'],
-            KeysEnum.BALCONY_COUNT.value: data['Балкон'],
-            KeysEnum.DECORATION_FINISHING_TYPE.value: data['Отделка'],
-            KeysEnum.APPEARING_DATE.value: data[KeysEnum.APPEARING_DATE.value],
-            KeysEnum.DESAPEAR_DATE.value: data[KeysEnum.DESAPEAR_DATE.value]
-        }
-        return self.update_or_past(record, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
+        records = []
+        keys = [KeysEnum.LISTINGS_STATIC_FEATURES_ID.value,
+                KeysEnum.LISTING_TYPE_ID.value,
+                KeysEnum.ADDRES.value,
+                KeysEnum.ROOM_COUNT.value,
+                KeysEnum.PROPERTY_TYPE.value,
+                KeysEnum.TOTAL_AREA.value,
+                KeysEnum.LIVING_AREA.value,
+                KeysEnum.KITCHEN_AREA.value,
+                KeysEnum.APARTMENT_FLOOR.value,
+                KeysEnum.CEILING_HEIGHT.value,
+                KeysEnum.WINDOW_VIEW.value,
+                KeysEnum.RENOVATION.value,
+                KeysEnum.HEATING_TYPE.value,
+                KeysEnum.COMBINED_BATHROOM_COUNT.value,
+                KeysEnum.SEPARATE_BATHROOM_COUNT.value,
+                KeysEnum.LOGGIA_COUNT.value,
+                KeysEnum.BALCONY_COUNT.value,
+                KeysEnum.DECORATION_FINISHING_TYPE.value,
+                KeysEnum.DESAPEAR_DATE.value
+                ]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value],
+                            offer[KeysEnum.LISTING_TYPE_ID.value],
+                            offer['Адресс'],
+                            offer['Число комнат'],
+                            offer['Тип жилья'],
+                            offer['Общая площадь'],
+                            offer['Жилая площадь'],
+                            offer['Площадь кухни'],
+                            offer['Этаж квартиры'],
+                            offer['Высота потолков'],
+                            offer['Вид из окон'],
+                            offer['Ремонт'],
+                            offer['Отопление'],
+                            offer['Совмещенный санузел'],
+                            offer['Раздельный санузел'],
+                            offer['Лоджия'],
+                            offer['Балкон'],
+                            offer['Отделка'],
+                            offer[KeysEnum.DESAPEAR_DATE.value],
+                            ))
+        return self.update_or_past(keys, records, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
 
     def update_or_past_listings(self, data):
-        record = {
-            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
-            KeysEnum.SELLER_NAME.value: data['Название продаца'],
-            KeysEnum.DESCRIPTION.value: data['Описание'],
-            KeysEnum.PRICE.value: data[KeysEnum.PRICE.value],
-        }
+        records = []
+        keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value],
+                            offer['Название продаца'],
+                            offer['Описание'],
+                            offer[KeysEnum.PRICE.value]))
         history_keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
-        return self.update_or_past(record, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
+        idx = self.update_or_past(keys, records, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
+        new_rows = []
+        for offer in data:
+            if offer['Название продаца'] in idx:
+                new_rows.append(offer)
+        return new_rows
 
     def update_or_past_listings_sale(self, data):
-        record = {
-            KeysEnum.LISTINGS_SALE_ID.value: data[KeysEnum.LISTING_ID.value],
-            KeysEnum.CONDITIONS.value: data['Условия сделки'],
-            KeysEnum.IS_MORTGAGE_AVAILABLE.value: data['Ипотека'],
-        }
+        records = []
+        keys = [KeysEnum.LISTINGS_SALE_ID.value, KeysEnum.CONDITIONS.value, KeysEnum.IS_MORTGAGE_AVAILABLE.value]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value],
+                            offer['Условия сделки'],
+                            offer['Ипотека']))
         history_keys = [KeysEnum.LISTINGS_SALE_ID.value, KeysEnum.CONDITIONS.value, KeysEnum.IS_MORTGAGE_AVAILABLE.value]
-        return self.update_or_past(record, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
+        return self.update_or_past(keys, records, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
 
     def update_or_past_listings_rent(self, data):
-        record = {
-            KeysEnum.LISTINGS_RENT_ID.value: data[KeysEnum.LISTING_ID.value]
-        }
+        records = []
+        keys = [KeysEnum.LISTINGS_RENT_ID.value]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value]))
+
         history_keys = [KeysEnum.LISTINGS_RENT_ID.value]
-        return self.update_or_past(record, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
+        return self.update_or_past(keys, records, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
 
     def update_or_past_websites_listings_map(self, data):
-        record = {
-            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
-            KeysEnum.WEBSITE_ID.value: data[KeysEnum.WEBSITE_ID.value],
-            KeysEnum.LINK_URL.value: data['Ссылка'],
-        }
-        self.instert_to_db(record, 'Websites_Listings_Map')
+        records = []
+        keys = [KeysEnum.LISTING_ID.value, KeysEnum.WEBSITE_ID.value, KeysEnum.LINK_URL.value]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value], offer[KeysEnum.WEBSITE_ID.value], offer['Ссылка']))
+
+        self.update_or_past(keys, records, 'map_id', 'Websites_Listings_Map')
 
     def update_or_past_listing_images(self, data):
-        record = {
-            KeysEnum.LISTING_ID.value: data[KeysEnum.LISTING_ID.value],
-            KeysEnum.IMAGE_PATH.value: data['Путь к картинкам']
-        }
-        self.instert_to_db(record, 'Listing_Images')
+        records = []
+        keys = [KeysEnum.LISTING_ID.value, KeysEnum.IMAGE_PATH.value]
+        for offer in data:
+            records.append((offer[KeysEnum.LISTING_ID.value], offer['Путь к картинкам']))
+
+        self.update_or_past(keys, records, 'image_id', 'Listing_Images')
 
     def data_dict_flatten(self, data):
         for key in list(data.keys()):
@@ -333,23 +409,27 @@ class DataWorker:
         data['Балкон'] = DataWorker.type_convert_if_possible(data, 'Балкон', int)
 
     async def save_to_db(self, data):
-        self.data_dict_flatten(data)
-        self.add_none_fields(data)
-        self.type_convert(data)
-        if data['Название продаца'] is not None:
-            self.update_or_past_seller(data)
+        offers_with_sellers = []
+        is_sale = True if data[0][KeysEnum.LISTING_TYPE_ID.value] == '1' else False
+        for offer in data:
+            self.data_dict_flatten(offer)
+            self.add_none_fields(offer)
+            self.type_convert(offer)
+            if offer['Название продаца'] is not None:
+                offers_with_sellers.append(offer)
+
+        self.update_or_past_seller(offers_with_sellers)
         self.update_or_past_addres(data)
         self.update_or_past_house_features(data)
         self.update_or_past_listings_static_features(data)
-        is_new = self.update_or_past_listings(data)
-        if data[KeysEnum.LISTING_TYPE_ID.value] == 1:
+        new_rows = self.update_or_past_listings(data)
+        if is_sale:
             self.update_or_past_listings_sale(data)
         else:
             self.update_or_past_listings_rent(data)
 
-        if is_new:
-            self.update_or_past_websites_listings_map(data)
-            self.update_or_past_listing_images(data)
+        self.update_or_past_websites_listings_map(new_rows)
+        self.update_or_past_listing_images(new_rows)
 
 
 
