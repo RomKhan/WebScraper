@@ -24,10 +24,10 @@ def create_app():
 
 
 app = create_app()
-scheduler = APScheduler()
-scheduler.add_job(id='my_job', func=get_image_loader().download_current_state, trigger='interval', seconds=60)
-scheduler.init_app(app)
-scheduler.start()
+# scheduler = APScheduler()
+# scheduler.add_job(id='my_job', func=get_image_loader().download_current_state, trigger='interval', seconds=60)
+# scheduler.init_app(app)
+# scheduler.start()
 atexit.register(teardown_db)
 
 if __name__ == '__main__':

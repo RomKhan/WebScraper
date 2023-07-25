@@ -75,6 +75,7 @@ class ScrapeAll(ScraperAbstract):
                     self.is_end = True
                 if offers_count > -1:
                     self.last_offers_count = offers_count
+                self.previous_idx = set()
 
             t2 = time.time()
             logging.info(

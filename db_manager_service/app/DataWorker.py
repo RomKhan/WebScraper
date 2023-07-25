@@ -430,6 +430,7 @@ class DataWorker:
 
         self.update_or_past_websites_listings_map(new_rows)
         self.update_or_past_listing_images(new_rows)
+        return len(new_rows)
 
 
 

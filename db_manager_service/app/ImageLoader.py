@@ -37,7 +37,7 @@ class ImageLoader:
             time.sleep(0.5)
 
 
-    def download_current_state(self):
+    async def download_current_state(self):
         self.is_downloading_current_state = True
         time.sleep(1)
         if self.disk.exists(f'{self.disk_folder_name}_0'):
