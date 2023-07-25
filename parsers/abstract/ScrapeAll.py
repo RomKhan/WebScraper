@@ -75,7 +75,6 @@ class ScrapeAll(ScraperAbstract):
                     self.is_end = True
                 if offers_count > -1:
                     self.last_offers_count = offers_count
-                self.previous_idx = set()
 
             t2 = time.time()
             logging.info(
@@ -141,6 +140,7 @@ class ScrapeAll(ScraperAbstract):
                 print(e, link)
 
         self.count_of_parsed += len(offers) - corrupt_offers
+        # threading.Thread(self.to_database, args=(offers_dict)).start()
         self.to_database(offers_dict)
         t2_test = time.time()
         logging.info(t2_test - t1_test)
