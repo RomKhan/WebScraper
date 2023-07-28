@@ -18,7 +18,8 @@ class DomClickScrapeAll(ScrapeAll):
                            website,
                            city,
                            listing_type,
-                           offers_xpath='//div[@data-e2e-id="offers-list__item"]')
+                           offers_xpath='//div[@data-e2e-id="offers-list__item"]',
+                           max_page=100)
 
     def parse_offer(self, offer):
         try:

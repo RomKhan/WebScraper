@@ -319,7 +319,7 @@ class DataWorker:
         idx = self.update_or_past(keys, records, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
         new_rows = []
         for offer in data:
-            if offer['Название продаца'] in idx:
+            if offer[KeysEnum.LISTING_ID.value] in idx:
                 new_rows.append(offer)
         return new_rows
 

@@ -18,7 +18,8 @@ class CianScrapeAll(ScrapeAll):
                            website,
                            city,
                            listing_type,
-                           offers_xpath='//article[@data-name="CardComponent"]')
+                           offers_xpath='//article[@data-name="CardComponent"]',
+                           max_page=54)
 
     def parse_offer(self, offer):
         link_area = offer.xpath('.//div[@data-name="LinkArea"]')

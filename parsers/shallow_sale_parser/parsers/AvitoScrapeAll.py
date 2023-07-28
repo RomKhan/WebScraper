@@ -17,7 +17,8 @@ class AvitoScrapeAll(ScrapeAll):
                            website,
                            city,
                            listing_type,
-                           offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]")
+                           offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]",
+                           max_page=100)
 
     def parse_offer(self, offer):
         residential_complex = None

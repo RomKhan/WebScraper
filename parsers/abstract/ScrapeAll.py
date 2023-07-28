@@ -18,40 +18,42 @@ class ScrapeAll(ScraperAbstract):
                  website_name,
                  city,
                  listing_type,
-                 offers_xpath):
+                 offers_xpath,
+                 max_page):
         ScraperAbstract.__init__(self, website_name, city, listing_type)
         self.url_components = url_components
         self.prev_price = 0
         self.current_price = 0
-        self.last_offers_count = 0
+        self.last_offers_count = -1
         self.is_end = False
+        self.max_page = max_page
 
         self.count_of_parsed = 0
         self.count_of_corrupted = 0
-        self.prev_count_of_lisitngs = -1
+        # self.prev_count_of_lisitngs = -1
         self.offers_xpath = offers_xpath
         self.status = True
         self.url_queue = []
 
-    def set_step(self):
-        issuie_count = 0
-        while True:
-            url = self.get_desk_link()
-            page_source = self.get_page(url)
-            self.count_of_requests += 1
-            offers_count = self.get_count_of_offers(page_source)
-            if offers_count == -1 or self.prev_count_of_lisitngs == offers_count:
-                if issuie_count > 5:
-                    break
-                else:
-                    issuie_count += 1
-                    continue
-            if offers_count == 0 and self.last_offers_count != 0:
-                self.is_end = True
-                break
-            break
-
-        return offers_count, page_source
+    # def set_step(self):
+    #     issuie_count = 0
+    #     while True:
+    #         url = self.get_desk_link()
+    #         page_source = self.get_page(url)
+    #         self.count_of_requests += 1
+    #         offers_count = self.get_count_of_offers(page_source)
+    #         if offers_count == -1 or self.prev_count_of_lisitngs == offers_count:
+    #             if issuie_count > 5:
+    #                 break
+    #             else:
+    #                 issuie_count += 1
+    #                 continue
+    #         if offers_count == 0 and self.last_offers_count != 0:
+    #             self.is_end = True
+    #             break
+    #         break
+    #
+    #     return offers_count, page_source
 
     def reset_iter(self):
         self.prev_price = 0
@@ -60,22 +62,22 @@ class ScrapeAll(ScraperAbstract):
         t1 = time.time()
         page_source, self.status = self.get_page(url, pod, key)
         if self.status:
-            idx, last_price = self.parse_page(url, content=page_source)
-            if len(self.previous_idx) == 0 and page == 1:
-                self.previous_idx = idx
+            last_price = self.parse_page(url, content=page_source)
+            # if len(self.previous_idx) == 0 and page == 1:
+            #     self.previous_idx = idx
 
             if last_price is not None and last_price > self.current_price:
                 self.current_price = last_price
 
-            idx_diff = len(idx - self.previous_idx)
-            if idx_diff == 0 and page > 1:
+            # idx_diff = len(idx - self.previous_idx)
+            if page >= self.max_page:
                 self.prev_price = self.current_price
                 offers_count = self.get_count_of_offers(page_source)
                 if offers_count == 0 and self.last_offers_count != 0:
                     self.is_end = True
                 if offers_count > -1:
                     self.last_offers_count = offers_count
-                self.previous_idx = set()
+                # self.previous_idx = set()
 
             t2 = time.time()
             logging.info(
@@ -122,7 +124,7 @@ class ScrapeAll(ScraperAbstract):
         t1_test = time.time()
         tree = html.fromstring(content)
         offers_dict = []
-        idx = set()
+        # idx = set()
         last_price = 0
 
         offers = tree.xpath(self.offers_xpath)
@@ -134,7 +136,7 @@ class ScrapeAll(ScraperAbstract):
                     corrupt_offers += 1
                     self.count_of_corrupted += 1
                     continue
-                idx.add(id)
+                # idx.add(id)
                 last_price = int(data[KeysEnum.PRICE.value])
                 offers_dict.append(data)
             except Exception as e:
@@ -142,10 +144,10 @@ class ScrapeAll(ScraperAbstract):
 
         self.count_of_parsed += len(offers) - corrupt_offers
         # threading.Thread(self.to_database, args=(offers_dict)).start()
-        self.to_database(offers_dict)
+        new_count = self.to_database(offers_dict)
         t2_test = time.time()
         logging.info(t2_test - t1_test)
-        return idx, last_price
+        return last_price
 
     def get_price_windows(self):
         pass

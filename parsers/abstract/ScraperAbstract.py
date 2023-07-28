@@ -21,7 +21,7 @@ class ScraperAbstract:
         self.website_db_id = requests.get(self.db_flow_url+'/getWebsiteId', params={'website': website_name}).text
         self.city_db_id = requests.get(self.db_flow_url+'/getCityId', params={'city': city}).text
         self.listing_type_db_id = requests.get(self.db_flow_url+'/getListingTypeId', params={'listing_type': listing_type}).text
-        self.previous_idx = set()
+        # self.previous_idx = set()
         self.count_of_requests = 0
 
     def reserve_pods(self):
@@ -103,7 +103,12 @@ class ScraperAbstract:
             offer[KeysEnum.CITY_ID.value] = self.city_db_id
             offer[KeysEnum.LISTING_TYPE_ID.value] = self.listing_type_db_id
 
-        requests.post(self.db_flow_url+'/saveListing', json={'offers': offers})
+        try:
+            request_text = requests.post(self.db_flow_url+'/saveListing', json={'offers': offers}).text
+            inserted_rows = int(request_text)
+        except:
+            inserted_rows = -1
+        return inserted_rows
 
     # def delete_webdriver(self, driver):
     #     driver.close()
