@@ -54,7 +54,9 @@ class DataWorker:
         self.lisitng_sale_keys = [
             KeysEnum.LISTING_ID.value,
             'Условия сделки',
-            'Ипотека'
+            'Ипотека',
+            'Торг',
+            'Онлайн показ'
         ]
         self.lisitng_rent_keys = [
             KeysEnum.LISTING_ID.value
@@ -325,12 +327,23 @@ class DataWorker:
 
     def update_or_past_listings_sale(self, data):
         records = []
-        keys = [KeysEnum.LISTINGS_SALE_ID.value, KeysEnum.CONDITIONS.value, KeysEnum.IS_MORTGAGE_AVAILABLE.value]
+        keys = [KeysEnum.LISTINGS_SALE_ID.value,
+                KeysEnum.CONDITIONS.value,
+                KeysEnum.IS_MORTGAGE_AVAILABLE.value,
+                KeysEnum.ONLINE_VIEW.value,
+                KeysEnum.NEGOTIATION.value]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
                             offer['Условия сделки'],
-                            offer['Ипотека']))
-        history_keys = [KeysEnum.LISTINGS_SALE_ID.value, KeysEnum.CONDITIONS.value, KeysEnum.IS_MORTGAGE_AVAILABLE.value]
+                            offer['Ипотека'],
+                            offer['Торг'],
+                            offer['Онлайн показ']
+                            ))
+        history_keys = [KeysEnum.LISTINGS_SALE_ID.value,
+                        KeysEnum.CONDITIONS.value,
+                        KeysEnum.IS_MORTGAGE_AVAILABLE.value,
+                        KeysEnum.ONLINE_VIEW.value,
+                        KeysEnum.NEGOTIATION.value]
         return self.update_or_past(keys, records, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
 
     def update_or_past_listings_rent(self, data):

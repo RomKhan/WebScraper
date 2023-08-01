@@ -24,19 +24,24 @@
 # updated_rows = cursor.fetchall()
 # d = 0
 import os
+import threading
 import time
 
-import old.undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
+
+import undetected_chromedriver as uc
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 options = webdriver.ChromeOptions()
 # options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dev-shm-usage')
-options.add_argument("--disable-images")
+options.add_argument("--disable-images=True")
 options.add_argument('--disable-infobars')
-options.add_argument('--proxy-server=http://91.238.211.110:8080')
+# options.add_argument('--proxy-server=http://88.87.93.124:40973')
 # options.add_argument('--disable-features=VizDisplayCompositor')
 # options.add_argument("--incognito")
 # chrome_options.add_argument('--disable-dev-shm-usage')
@@ -44,13 +49,40 @@ options.add_argument('--proxy-server=http://91.238.211.110:8080')
 # chrome_options.add_argument("--disable-browser-side-navigation")
 
 options.add_argument('--disable-blink-features=AutomationControlled')
-options.page_load_strategy = 'none'
-driver = uc.Chrome(options=options
+options.page_load_strategy = 'normal'
+driver = uc.Chrome(options=options, user_multi_procs=True
                    )
-driver.get('https://www.google.kz/?hl=ru')
-time.sleep(10)
+driver.execute_cdp_cmd('Page.enable', {})
+driver.execute_cdp_cmd('Network.enable', {})
+
+# driver.get('https://whatismyipaddress.com/ru/index')
+# time.sleep(10)
+driver.set_page_load_timeout(10)
+# driver.implicitly_wait(2)
+driver.switch_to.new_window('tab')
+try:
+    threading.Thread(target=driver.get, args=('https://realty.ya.ru/moskva/kupit/kvartira/?sort=PRICE'))
+except:
+    pass
+# body = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+# try:
+#     WebDriverWait(driver, 10).until(lambda d: False)
+# except:
+#     pass
+# time.sleep(10)
+# driver.execute_script("window.stop();")
+t1 = time.time()
+while time.time() - t1 < 10:
+    page_source = driver.page_source
+    print(page_source)
+# page_source = driver.find_element(By.TAG_NAME, 'body').get_attribute("outerHTML")
+print(time.time()-t1)
+# print(page_source)
 driver.get('https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=price_object_order')
-time.sleep(10)
+body = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+t1 = time.time()
+page_source = driver.find_element(By.TAG_NAME, 'body').get_attribute("outerHTML")
+print(time.time()-t1)
 driver.get('https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=7000000&sort=price&sort_dir=asc&sale_price__gte=10000&offset=0')
 time.sleep(10)
 driver.get('https://www.avito.ru/moskva/kvartiry/prodam?bt=1&pmax=10000000&pmin=100000&p=1&s=1')

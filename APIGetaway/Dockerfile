@@ -13,4 +13,4 @@ ENV FLASK_APP=APIGetaway.py
 # Запуск приложения Flask
 WORKDIR /app
 EXPOSE 8083
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8083", "--access-logfile", "-", "APIGetaway:app"]
+CMD ["uvicorn", "APIGetaway:app", "--host", "0.0.0.0", "--port", "8083", "--workers", "2"]

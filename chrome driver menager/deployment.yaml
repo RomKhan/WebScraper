@@ -16,6 +16,8 @@ spec:
       containers:
       - name: container
         image: stikeyrs/scraper:driver-container
+#        securityContext:
+#          privileged: true
         resources:
           limits:
             cpu: "0.7"
@@ -30,7 +32,7 @@ spec:
             path: /ping  # Путь, который будет использоваться для проверки "живости" контейнера
             port: 8082  # Порт, на котором работает ваше приложение
           initialDelaySeconds: 30  # Задержка перед первой проверкой (в секундах)
-          periodSeconds: 60  # Периодичность проверок "живости" (в секундах)
-          failureThreshold: 5  # Количество неудачных проверок перед перезапуском
+          periodSeconds: 20  # Периодичность проверок "живости" (в секундах)
+          failureThreshold: 3  # Количество неудачных проверок перед перезапуском
       imagePullSecrets:
         - name: docker-registry-secret

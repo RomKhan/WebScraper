@@ -7,18 +7,22 @@ import signal
 import string
 import subprocess
 import sys
+import threading
 import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 from flask import Flask, request
+from fastapi import FastAPI, HTTPException, Response
+import asyncio
 
 import undetected_chromedriver as uc
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium import webdriver
 
-app = Flask(__name__)
+# app = Flask(__name__)
+app = FastAPI()
 lock = False
 shutdown_flag = False
 # atexit.register(lambda: sys.exit(1))
@@ -43,9 +47,10 @@ options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dev-shm-usage')
-options.add_argument("--disable-images")
+# options.add_argument("--disable-images")
 options.add_argument('--disable-infobars')
 options.add_argument(f"--user-agent={random.choice(useragents)}")
+options.add_argument('--blink-settings=imagesEnabled=false')
 # options.add_argument('--proxy-server=http://91.238.211.110:8080')
 # options.add_argument('--disable-features=VizDisplayCompositor')
 # options.add_argument("--incognito")
@@ -56,35 +61,35 @@ options.add_argument(f"--user-agent={random.choice(useragents)}")
 options.add_argument('--disable-blink-features=AutomationControlled')
 options.page_load_strategy = 'none'
 driver = uc.Chrome(options=options,
-                   driver_executable_path=os.environ['CHROMEDRIVER_PATH']
+                   driver_executable_path=os.environ['CHROMEDRIVER_PATH'],
+                   user_multi_procs=True
                    )
 # driver.execute_script(f"window.open('about:blank','_blank')")
 # driver.execute_script(f"window.open('about:blank','_blank')")
 # driver.switch_to.window(driver.window_handles[-1])
 
 websites = dict()
+driver.set_page_load_timeout(8)
 
 
-@app.route("/ping")
+@app.get("/ping", status_code=200)
 def ping():
-    return "I AM OK!", 200
+    return "I AM OK!"
 
-async def async_get_page(website):
-    # tabs_before = driver.window_handles
-    # driver.get(url)
-    # driver.execute_script(f"window.open('{url}','_blank')")
-    # tab_id = list(set(driver.window_handles) - set(tabs_before))[0]
-    # driver.switch_to.window(tab_id)
+def waiter(website):
+    page_source = None
     try:
         if website == 'cian':
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+            page_source = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body'))).get_attribute("outerHTML")
         elif website == 'domclick':
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'noscript')))
+            page_source = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'noscript'))).get_attribute("outerHTML")
         elif website == 'avito':
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+            page_source = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body'))).get_attribute("outerHTML")
+        elif website == 'yandex':
+            page_source = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body'))).get_attribute("outerHTML")
     except:
         pass
-    # time.sleep(10)
+    return page_source
 
 def shutdown_gunicorn():
     # Команда для завершения сервера Gunicorn
@@ -96,26 +101,17 @@ def shutdown_docker():
     cmd = 'docker container stop your_container_name'
     subprocess.call(cmd, shell=True)
 
-@app.before_request
-def check_shutdown():
+# @app.before_request
+def shutdown():
     global shutdown_flag
     if shutdown_flag:
         os.kill(os.getpid(), signal.SIGINT)
 
-@app.route('/getCooldown', methods=['GET'])
-def get_cooldown():
-    website = request.args.get('website')
-    global websites
-    if website in websites:
-        return str(time.time() - websites[website])
-    else:
-        return '10000'
 
-
-@app.route('/tryReserve', methods=['GET'])
-def try_reserve():
-    website = request.args.get('website')
-    cooldown = request.args.get('cooldown')
+@app.get('/tryReserve', status_code=200)
+async def try_reserve(website: str, cooldown: str):
+    # website = request.args.get('website')
+    # cooldown = request.args.get('cooldown')
     key = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
     global websites
     if website in websites:
@@ -123,78 +119,127 @@ def try_reserve():
             websites[website][2] = key
             websites[website][1] = True
             websites[website][0] = time.time()
-            return {'key': f'{key}'}, 200
+            return {'key': f'{key}'}
     else:
         websites[website] = [time.time(), True, key]
-        return {'key': f'{key}'}, 200
+        return {'key': f'{key}'}
 
-    return {'message': 'not reserved'}, 503
+    raise HTTPException(status_code=404, detail="not reserved")
 
 
-@app.route('/getPage', methods=['GET'])
-async def handle_request():
-    url = request.json['url']
-    website = request.json['website']
-    key = request.json['key']
+page_queue = []
+url_queue = []
+buffer = dict()
+home_page_id = driver.current_window_handle
+def page_manager():
+    global shutdown_flag
+    global websites
+    while True:
+        logging.info(f'Количество открытых вкладок: {len(driver.window_handles)}')
+        for i in range(len(url_queue)):
+            url, website, key = url_queue.pop(0)
+            websites[website][0] = time.time()
+            driver.switch_to.new_window('tab')
+            driver.get(url)
+            page_tab = driver.current_window_handle
+            # threading.Thread(target=driver.get, args=(url))
+            page_queue.append([page_tab, website, key, time.time()])
+        if len(page_queue) > 0:
+            current_tab, website, key, start_time = page_queue.pop(0)
+            # if time.time() - start_time < 4:
+            #     page_queue.append([current_tab, website, key, start_time])
+            #     time.sleep(1)
+            #     continue
+            try:
+                t1 = time.time()
+                driver.switch_to.window(current_tab)
+                # page_source = driver.page_source
+                page_source = waiter(website)
+                logging.info(f'Прошел waiter, {website}, {time.time() - t1}')
+                # logging.info(page_source)
+                # if len(page_source) > 3000:
+                if page_source is not None and len(page_source) > 1000:
+                    buffer[key] = page_source.encode('utf-8')
+                    driver.close()
+                    driver.switch_to.window(home_page_id)
+                    websites[website][1] = False
+                    logging.info(f'Получилось, {website}, {time.time() - t1}')
+                else:
+                    page_queue.append([current_tab, website, key, start_time])
+            except Exception as e:
+                logging.error(f'An error occurred: {str(e)}')
+                shutdown_flag = True
+                shutdown()
+        if len(page_queue) == len(url_queue) == 0:
+            time.sleep(1)
+
+async def parse_page(website, url):
+    logging.info(f'Количество открытых вкладок: {len(driver.window_handles)}')
+    global lock
+    global shutdown_flag
+    while lock:
+        if shutdown_flag:
+            raise Exception('shutdown')
+        websites[website][0] = time.time()
+        time.sleep(1)
+    lock = True
+    websites[website][0] = time.time()
+    driver.switch_to.new_window('tab')
+    page_tab = driver.current_window_handle
+    driver.get(url)
+    lock = False
+
+    await asyncio.sleep(5)
+
+    while lock:
+        if shutdown_flag:
+            raise Exception('shutdown')
+        time.sleep(1)
+    lock = True
+    t1 = time.time()
+    driver.switch_to.window(page_tab)
+    page_source = driver.page_source
+    # logging.info(f'page_source - {page_source}, {website}, {time.time() - t1}')
+    driver.close()
+    driver.switch_to.window(home_page_id)
+    lock = False
+    websites[website][1] = False
+    logging.info(f'Получилось, {website}, {time.time() - t1}')
+    return page_source
+
+@app.get('/getPage', status_code=200)
+async def handle_request(request_json: dict):
+    url = request_json['url']
+    website = request_json['website']
+    key = request_json['key']
+    logging.info(f"Получил запрос, {website}")
 
     global websites
     if website not in websites:
-        return {"message": "not reserved"}, 503
+        HTTPException(status_code=404, detail="not reserved")
     if websites[website][2] != key:
-        return {"message": "wrong pod key"}, 503
+        HTTPException(status_code=404, detail="wrong pod key")
 
-    global lock
+    page_source = ''
     global shutdown_flag
-    websites[website][0] = time.time()
     try:
-        t1 = time.time()
-
-        while lock:
-            if shutdown_flag:
-                return '<html><head></head><body><h1>error</h1></body></html>', 503
-            await asyncio.sleep(1)
-        lock = True
-        driver.switch_to.new_window('tab')
-        current_tab = driver.current_window_handle
-        websites[website][0] = time.time()
-        driver.get(url)
-        lock = False
-
-        await async_get_page(website)
-
-        while lock:
-            if shutdown_flag:
-                return '<html><head></head><body><h1>error</h1></body></html>', 503
-            await asyncio.sleep(1)
-        lock = True
-        driver.switch_to.window(current_tab)
-        driver.execute_script('window.stop;')
-        page_source = driver.find_element(By.TAG_NAME, 'body').get_attribute("outerHTML")
-        driver.close()
-        driver.switch_to.window(driver.window_handles[0])
-        websites[website][1] = False
-        lock = False
-
-        t2 = time.time()
-        logging.info(f"{t2 - t1}, {website}")
-
-        return page_source, 200
+        page_source = await parse_page(website, url)
     except Exception as e:
-            # Если возникает исключение, вызываем sys.exit() только внутри функции handle_request()
-            logging.error(f'An error occurred: {str(e)}')
-            shutdown_flag = True
-            shutdown_gunicorn()
-            shutdown_docker()
-            lock = False
-            return '<html><head></head><body><h1>error</h1></body></html>', 503
+        logging.error(f'An error occurred: {str(e)}')
+        shutdown_flag = True
+        shutdown()
+    headers = {
+        "Content-Type": "text/html"
+    }
+    return Response(content=page_source, headers=headers)
 
-
-if __name__ == '__main__':
-    host = 'localhost'
-    port = 8082
-
-    # Получение порта из переменной среды, если есть
-    if 'PORT' in os.environ:
-        port = int(os.environ['PORT'])
-
-    app.run(host=host, port=port)
+# threading.Thread(target=page_manager).start()
+# if __name__ == '__main__':
+#     host = 'localhost'
+#     port = 8082
+#
+#     # Получение порта из переменной среды, если есть
+#     if 'PORT' in os.environ:
+#         port = int(os.environ['PORT'])
+#
+#     app.run(host=host, port=port)

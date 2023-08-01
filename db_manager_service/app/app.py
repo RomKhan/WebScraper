@@ -31,10 +31,4 @@ app = create_app()
 atexit.register(teardown_db)
 
 if __name__ == '__main__':
-    if not os.path.exists('cian'):
-        os.mkdir('cian')
-    if not os.path.exists('domclick'):
-        os.mkdir('domclick')
-    if not os.path.exists('avito'):
-        os.mkdir('avito')
     app.run(host='0.0.0.0', port=8080)

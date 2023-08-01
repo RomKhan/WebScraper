@@ -1,7 +1,6 @@
 import re
 
 import unidecode
-from selenium.webdriver.common.by import By
 from lxml import html
 
 from KeysEnum import KeysEnum

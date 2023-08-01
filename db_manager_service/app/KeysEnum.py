@@ -52,3 +52,5 @@ class KeysEnum(Enum):
     LISTINGS_RENT_ID = 'listings_rent_id'
     LINK_URL = 'link_url'
     IMAGE_PATH = 'image_path'
+    ONLINE_VIEW = 'online_view'
+    NEGOTIATION = 'negotiation'

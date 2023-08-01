@@ -6,6 +6,8 @@ from lxml import html
 
 from KeysEnum import KeysEnum
 from abstract.ScraperAbstract import ScraperAbstract
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScraperAbstract import ScraperAbstract
 import logging
 
 
@@ -30,30 +32,9 @@ class ScrapeAll(ScraperAbstract):
 
         self.count_of_parsed = 0
         self.count_of_corrupted = 0
-        # self.prev_count_of_lisitngs = -1
         self.offers_xpath = offers_xpath
         self.status = True
         self.url_queue = []
-
-    # def set_step(self):
-    #     issuie_count = 0
-    #     while True:
-    #         url = self.get_desk_link()
-    #         page_source = self.get_page(url)
-    #         self.count_of_requests += 1
-    #         offers_count = self.get_count_of_offers(page_source)
-    #         if offers_count == -1 or self.prev_count_of_lisitngs == offers_count:
-    #             if issuie_count > 5:
-    #                 break
-    #             else:
-    #                 issuie_count += 1
-    #                 continue
-    #         if offers_count == 0 and self.last_offers_count != 0:
-    #             self.is_end = True
-    #             break
-    #         break
-    #
-    #     return offers_count, page_source
 
     def reset_iter(self):
         self.prev_price = 0
@@ -62,22 +43,19 @@ class ScrapeAll(ScraperAbstract):
         t1 = time.time()
         page_source, self.status = self.get_page(url, pod, key)
         if self.status:
-            last_price = self.parse_page(url, content=page_source)
-            # if len(self.previous_idx) == 0 and page == 1:
-            #     self.previous_idx = idx
+            count, last_price = self.parse_page(url, content=page_source)
+            if count == 0:
+                self.url_queue.append([url, attempts + 1, page])
 
             if last_price is not None and last_price > self.current_price:
                 self.current_price = last_price
 
-            # idx_diff = len(idx - self.previous_idx)
-            if page >= self.max_page:
-                self.prev_price = self.current_price
+            if page == 1:
                 offers_count = self.get_count_of_offers(page_source)
                 if offers_count == 0 and self.last_offers_count != 0:
                     self.is_end = True
                 if offers_count > -1:
                     self.last_offers_count = offers_count
-                # self.previous_idx = set()
 
             t2 = time.time()
             logging.info(
@@ -94,11 +72,11 @@ class ScrapeAll(ScraperAbstract):
 
     def iter(self):
         self.current_page = 1
-        start_price = self.prev_price
-        while self.prev_price == start_price:
+        self.prev_price = self.current_price
+        while self.current_page <= self.max_page:
             pods = self.reserve_pods()
             if len(pods) == 0:
-                time.sleep(5)
+                time.sleep(2)
                 continue
             for pod in pods:
                 url = self.get_desk_link()
@@ -121,10 +99,9 @@ class ScrapeAll(ScraperAbstract):
         self.prev_price = int(new_price)
 
     def parse_page(self, link, content):
-        t1_test = time.time()
         tree = html.fromstring(content)
         offers_dict = []
-        # idx = set()
+        idx = set()
         last_price = 0
 
         offers = tree.xpath(self.offers_xpath)
@@ -136,7 +113,7 @@ class ScrapeAll(ScraperAbstract):
                     corrupt_offers += 1
                     self.count_of_corrupted += 1
                     continue
-                # idx.add(id)
+                idx.add(id)
                 last_price = int(data[KeysEnum.PRICE.value])
                 offers_dict.append(data)
             except Exception as e:
@@ -144,10 +121,12 @@ class ScrapeAll(ScraperAbstract):
 
         self.count_of_parsed += len(offers) - corrupt_offers
         # threading.Thread(self.to_database, args=(offers_dict)).start()
-        new_count = self.to_database(offers_dict)
-        t2_test = time.time()
-        logging.info(t2_test - t1_test)
-        return last_price
+        if len(offers_dict) > 0:
+            saved_count = self.to_database(offers_dict)
+            if saved_count == 0 and len(offers) - corrupt_offers > 0:
+                logging.info(f'DON\T Saved {link}')
+        count = len(idx)
+        return count, last_price
 
     def get_price_windows(self):
         pass

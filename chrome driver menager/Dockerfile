@@ -29,4 +29,4 @@ RUN cp /usr/bin/chromedriver /var/chromedriver/chromedriver_copy
 # Запуск приложения Flask
 WORKDIR /app
 EXPOSE 8082
-CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:8082", "--access-logfile", "-", "chrome_server:app"]
+CMD ["uvicorn", "chrome_server:app", "--host", "0.0.0.0", "--port", "8082", "--workers", "1"]

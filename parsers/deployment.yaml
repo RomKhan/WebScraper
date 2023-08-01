@@ -34,6 +34,13 @@ spec:
               value: avito
             - name: CITY
               value: Москва
+        - name: shallow-sale-parser-yandex-moskow
+          image: stikeyrs/scraper:shallow_sale_parser
+          env:
+            - name: WEBSITE_NAME
+              value: yandex
+            - name: CITY
+              value: Москва
 #      restartPolicy: OnFailure  # Политика перезапуска контейнера
       imagePullSecrets:
         - name: docker-registry-secret

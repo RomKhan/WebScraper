@@ -5,8 +5,10 @@ import yadisk
 
 import time
 
-from CianScraper import CianScraper
-from parsers.shallow_sale_parser.parsers.DomClickScrapeAll import DomClickScrapeAll
+# from old.CianScraper import CianScraper
+from parsers.shallow_sale_parser.parsers.YandexScrapeAll import YandexScrapeAll
+from parsers.shallow_sale_parser.utils import parse_all
+# from parsers.shallow_sale_parser.parsers.DomClickScrapeAll import DomClickScrapeAll
 import os
 import shutil
 
@@ -38,15 +40,15 @@ def parse_cian(urls, city_link_match, appearing_mask, image_loader, data_saver):
                 time.sleep(wait)
         time.sleep(random.randint(appearing_mask[sort_mask[0]]-5, appearing_mask[sort_mask[0]]+5) * 60)
 
-def parse_all(scraper_type, link, city, type):
-    t1 = time.time()
-    url = scraper_type.parse_link(link)
-    scraper = scraper_type(url, city, type)
-    while not scraper.is_end:
-        scraper.iter()
-    t2 = time.time()
-    print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
-          f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
+# def parse_all(scraper_type, link, city, type):
+#     t1 = time.time()
+#     url = scraper_type.parse_link(link)
+#     scraper = scraper_type(url, city, type)
+#     while not scraper.is_end:
+#         scraper.iter()
+#     t2 = time.time()
+#     print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
+#           f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
 
 def main():
@@ -105,11 +107,17 @@ def main():
     # print(f'Удалось спарсить {scraper.count_of_parsed} обявлений, '
     #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
-    url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=7000000&sort=price&sort_dir=asc&sale_price__gte=10000&offset=0'
-    thread1 = threading.Thread(target=parse_all, args=(
-        DomClickScrapeAll, url_domclick_moscow, 'Москва', 'Продажа'))
-    thread1.start()
+    url_yandex_moscow = 'https://realty.ya.ru/moskva/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1'
+    thread0 = threading.Thread(target=parse_all, args=(
+        YandexScrapeAll, url_yandex_moscow, 'Москва', 'yandex', 'Продажа'))
+    thread0.start()
     time.sleep(5)
+
+    # url_domclick_moscow = 'https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sale_price__lte=7000000&sort=price&sort_dir=asc&sale_price__gte=10000&offset=0'
+    # thread1 = threading.Thread(target=parse_all, args=(
+    #     DomClickScrapeAll, url_domclick_moscow, 'Москва', 'Продажа'))
+    # thread1.start()
+    # time.sleep(5)
 
     # url_cian_moscow = 'https://www.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&maxprice=8000000&minprice=100000&offer_type=flat&p=2&region=1&sort=price_object_order'
     # thread2 = threading.Thread(target=parse_all, args=(
@@ -138,7 +146,8 @@ def main():
     # thread3 = threading.Thread(target=scraper3.run)
     # #thread3.start()
 
-    thread1.join()
+    thread0.join()
+    # thread1.join()
     # thread2.join()
     # thread3.join()
     t2 = time.time()
