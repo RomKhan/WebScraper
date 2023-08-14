@@ -20,4 +20,5 @@ COPY ./app /app
 # Запуск приложения Flask
 WORKDIR /app
 EXPOSE 8080
-CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]
+#CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]

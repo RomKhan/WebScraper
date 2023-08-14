@@ -18,13 +18,23 @@ class CianScrapeAll(ScrapeAll):
                            city,
                            listing_type,
                            offers_xpath='//article[@data-name="CardComponent"]',
-                           max_page=54)
+                           max_page=54,
+                           offers_per_page=28)
 
     def parse_offer(self, offer):
         link_area = offer.xpath('.//div[@data-name="LinkArea"]')
         try:
             link = link_area[0].xpath('.//a')[0].get('href')
-            adress = ' '.join(link_area[0].xpath(".//a[@data-name='GeoLabel']/text()")).replace('\'', '"')
+            geo_data = link_area[0].xpath(".//a[@data-name='GeoLabel']/text()")
+            address = ''
+            for i in range(len(geo_data)-1):
+                if geo_data[i].startswith("м. ") or geo_data[i].split()[0].isupper() or geo_data[i] == 'ЗелАО':
+                    continue
+                else:
+                    address += geo_data[i].replace('\'', '"') + ', '
+            address = address + geo_data[-1]
+            # if not address.startswith('Москва'):
+            #     logging.info(f'{address}')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None
@@ -66,7 +76,7 @@ class CianScrapeAll(ScrapeAll):
                       'Число комнат': rooms_count,
                       'Тип жилья': house_type,
                       'Общая площадь': total_square,
-                      'Адресс': adress,
+                      'Адресс': address,
                       'Описание': description,
                       'Ссылка': link,
                       'Тип продаца': trader_type,

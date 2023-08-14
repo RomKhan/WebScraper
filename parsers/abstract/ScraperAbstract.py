@@ -19,9 +19,10 @@ class ScraperAbstract:
         # self.db_flow_url = 'http://192.168.100.53:31287/db'
         # self.chrome_service = 'http://192.168.100.53:32075/'
         self.website_name = website_name
-        self.website_db_id = requests.get(self.db_flow_url+'/getWebsiteId', params={'website': website_name}).text
-        self.city_db_id = requests.get(self.db_flow_url+'/getCityId', params={'city': city}).text
-        self.listing_type_db_id = requests.get(self.db_flow_url+'/getListingTypeId', params={'listing_type': listing_type}).text
+        self.city = city
+        self.website_db_id = int(requests.get(self.db_flow_url+'/getWebsiteId', params={'website': website_name}).text.strip('"'))
+        self.city_db_id = int(requests.get(self.db_flow_url+'/getCityId', params={'city': city}).text.strip('"'))
+        self.listing_type_db_id = int(requests.get(self.db_flow_url+'/getListingTypeId', params={'listing_type': listing_type}).text.strip('"'))
         self.count_of_requests = 0
 
     def reserve_pods(self):

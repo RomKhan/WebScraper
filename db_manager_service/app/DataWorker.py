@@ -1,14 +1,13 @@
-import logging
-import time
+import asyncio
 
 from KeysEnum import KeysEnum
 
 
 class DataWorker:
-    def __init__(self, db_connection):
+    def __init__(self, async_pull, address_manager):
         self.seller_keys = ['Название продаца', 'Тип продаца']
         self.lisitng_type_keys = ['Тип обьявления']
-        self.adress_keys = ['Адресс', KeysEnum.CITY_ID.value]
+        self.adress_keys = [KeysEnum.ADDRESS_ID.value, 'Адресс', KeysEnum.CITY_ID.value]
         self.house_fetures_keys = [
             'Этажей в доме',
             'Строительная серия',
@@ -68,132 +67,67 @@ class DataWorker:
             'Путь к картинкам'
         ]
         self.not_changed_keys = ['appearing_date']
-        self.db_connection = db_connection
+        self.async_pull = async_pull
+        self.address_manager = address_manager
+        # self.sync_db_conn = sync_db_conn
+        self.address_pull = []
+        self.lock = False
 
-    # def get_price_windows(self, website_id, max_listings):
-    #     cursor = self.db_connection.cursor()
-    #     select_query = f"""
-    #                     SELECT MAX(price) AS max_price
-    #                     FROM (
-    #                         SELECT price,
-    #                         (ROW_NUMBER() OVER (ORDER BY price ASC) - 1) / {max_listings} AS win
-    #                         FROM Websites_Listings_Map
-    #                             JOIN Listings USING(listing_id)
-    #                             JOIN Listings_Static_Features ON listing_id = listings_static_features_id
-    #                             WHERE website_id = {website_id}
-    #                         AND desapear_date = (current_date - INTEGER '0')
-    #                         ORDER BY price
-    #                         ) AS subquery
-    #                     GROUP BY win
-    #                     ORDER BY max_price
-    #                 """
-    #     cursor.execute(select_query)
-    #     values = cursor.fetchone()
+    async def insert_many(self, query, records):
+        async with self.async_pull.acquire() as connection:
+            async with connection.transaction():
+                await connection.executemany(query, records)
 
-    async def get_id_by_condition(self, talbe, table_id, condition_value, condition_column):
-        cursor = self.db_connection.cursor()
+    async def query_with_returning(self, query, records=None):
+        async with self.async_pull.acquire() as connection:
+            async with connection.transaction():
+                if records is not None:
+                    return await connection.fetch(query, records)
+                else:
+                    return await connection.fetch(query)
 
+    async def get_by_condition(self, talbe, table_id, condition_value, condition_column):
+        while self.lock:
+            await asyncio.sleep(0.1)
+        self.lock = True
         select_query = f"""
                 SELECT {table_id} FROM {talbe} WHERE {condition_column}='{condition_value}'
             """
-        cursor.execute(select_query)
-        values = cursor.fetchone()
+        values = await self.query_with_returning(select_query)
 
-        if values != None:
-            cursor.close()
-            return values[0]
+        if len(values) != 0:
+            self.lock = False
+            return values[0][f'{table_id}']
         else:
             insert_query = f"""
                     INSERT INTO {talbe} ({condition_column})
-                    VALUES (%s)
+                    VALUES ($1)
                     RETURNING {table_id}
                 """
 
             record_to_insert = (condition_value,)
+            values = await self.query_with_returning(insert_query, *record_to_insert)
 
-            cursor.execute(insert_query, record_to_insert)
-            values = cursor.fetchone()
-            self.db_connection.commit()
-            cursor.close()
-            return values[0]
+            self.lock = False
+            return values[0][f'{table_id}']
 
-    # def get_if_exist(self, id, id_name, table_name):
-    #     cursor = self.db_connection.cursor()
-    #     select_query = f"""
-    #                 SELECT * FROM {table_name} WHERE {id_name}='{id}'
-    #             """
-    #     cursor.execute(select_query)
-    #     values = cursor.fetchone()
-    #
-    #     if values is not None:
-    #         columns = [desc[0] for desc in cursor.description]
-    #         values = dict(zip(columns, values))
-    #
-    #     cursor.close()
-    #
-    #     return values
-    #
-    # def instert_to_db(self, new_record, table_name):
-    #     cursor = self.db_connection.cursor()
-    #     keys = list(new_record.keys())
-    #     values = list(new_record.values())
-    #     insert_query = f'INSERT INTO {table_name} ({", ".join(keys)}) VALUES ({", ".join(["%s"] * len(keys))})'
-    #     record_to_insert = tuple(values)
-    #     cursor.execute(insert_query, record_to_insert)
-    #     self.db_connection.commit()
-    #     cursor.close()
-    #
-    # def update_record_db(self, record, new_record, id_name, table_name, history_keys = None):
-    #     id = record[id_name]
-    #     for key in list(new_record.keys()):
-    #         if record[key] == new_record[key] or new_record[key] == None or key in self.not_changed_keys:
-    #             new_record.pop(key)
-    #             if history_keys is not None and record[key] == None and key in history_keys:
-    #                 history_keys.remove(key)
-    #
-    #     keys = list(new_record.keys())
-    #     values = list(new_record.values())
-    #     values.append(id)
-    #     if history_keys is not None:
-    #         history_id = history_keys[0]
-    #         history_keys = list(set(keys) & set(history_keys))
-    #
-    #     if len(new_record) > 0:
-    #         cursor = self.db_connection.cursor()
-    #         update_query = f'UPDATE {table_name} SET {", ".join([f"{keys[i]} = %s" for i in range(len(keys))])} WHERE {id_name} = %s'
-    #         data = tuple(values)
-    #         cursor.execute(update_query, data)
-    #         self.db_connection.commit()
-    #         if history_keys is not None and len(history_keys) > 0:
-    #             values = [new_record[key] for key in history_keys]
-    #             history_keys.append(history_id)
-    #             values.append(id)
-    #             insert_query = f'INSERT INTO {table_name}_Changes ({", ".join(history_keys)}) VALUES ({", ".join(["%s"] * len(history_keys))})'
-    #             data = tuple(values)
-    #             cursor.execute(insert_query, data)
-    #             self.db_connection.commit()
-    #         cursor.close()
-
-    def update_or_past(self, keys, new_records, id_name, table_name, history_keys = None):
-        cursor = self.db_connection.cursor()
+    async def update_or_past(self, keys, new_records, id_name, table_name, history_keys = None):
         idx_all = set([row[0] for row in new_records])
         existed_rows = []
         if history_keys is not None:
-            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} IN %s ORDER BY {id_name}"
-            cursor.execute(select_query, (tuple(idx_all),))
-            existed_rows = cursor.fetchall()
+            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} = ANY($1)ORDER BY {id_name}"
+            existed_rows = await self.query_with_returning(select_query, list(idx_all))
         idx_exists = set([row[0] for row in existed_rows])
 
         insert_query = f"""INSERT INTO {table_name} ({", ".join(keys)})
-                              VALUES ({", ".join(["%s"] * len(keys))})
+                              VALUES ({", ".join([f"${i+1}" for i in range(len(keys))])})
                               ON CONFLICT ({id_name}) DO
                               UPDATE SET {", ".join([f"{key} = EXCLUDED.{key}" for key in keys])}"""
-        cursor.executemany(insert_query, new_records)
+        await self.insert_many(insert_query, new_records)
 
         if history_keys is not None and len(existed_rows) > 0:
-            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} IN %s ORDER BY {id_name}"
-            cursor.execute(select_query, (tuple(idx_exists),))
-            updated_rows = cursor.fetchall()
+            select_query = f"SELECT {', '.join(history_keys)} FROM {table_name} WHERE {id_name} = ANY($1) ORDER BY {id_name}"
+            updated_rows = await self.query_with_returning(select_query, list(idx_exists))
 
             filter_updated_rows = []
             for i in range(len(existed_rows)):
@@ -203,32 +137,114 @@ class DataWorker:
 
             if len(filter_updated_rows) > 0:
                 insert_changes_query = f"""INSERT INTO {table_name}_Changes ({", ".join(history_keys)})
-                                              VALUES ({", ".join(["%s"] * len(history_keys))})"""
-                cursor.executemany(insert_changes_query, filter_updated_rows)
+                                           VALUES ({", ".join([f"${i+1}" for i in range(len(history_keys))])})"""
+                await self.insert_many(insert_changes_query, filter_updated_rows)
 
-        self.db_connection.commit()
-        cursor.close()
         return idx_all - idx_exists
 
-    def update_or_past_seller(self, data):
+    async def update_or_past_seller(self, data):
         records = []
         keys = [KeysEnum.SELLER_NAME.value, KeysEnum.SELLER_TYPE.value]
         for offer in data:
             records.append((offer['Название продаца'], offer['Тип продаца']))
-        return self.update_or_past(keys, records, KeysEnum.SELLER_NAME.value, 'Sellers')
+        return await self.update_or_past(keys, records, KeysEnum.SELLER_NAME.value, 'Sellers')
 
-
-    def update_or_past_addres(self, data):
+    async def insert_address(self, data):
+        select_query = f"""SELECT address_id, latitude, longitude FROM Address
+                           WHERE (latitude, longitude)
+                           IN ({', '.join([f'{offer[KeysEnum.LATITUDE.value], offer[KeysEnum.LONGITUTE.value]}' for offer in data])})"""
+        existed_records = await self.query_with_returning(select_query)
+        existed_records = {(record[1], record[2]): record[0] for record in existed_records}
+        keys = [KeysEnum.FULL_ADDRESS.value, KeysEnum.CITY_ID.value, KeysEnum.LATITUDE.value, KeysEnum.LONGITUTE.value]
         records = []
-        keys = [KeysEnum.ADDRES.value, KeysEnum.CITY_ID.value]
+        # new_idx = []
+        equals = {}
+        for i in range(len(data)):
+            if (data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value]) in equals:
+                equals[(data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value])].append(i)
+            elif (data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value]) not in existed_records:
+                records.append((
+                    data[i][KeysEnum.ADDRESS_ID.value],
+                    data[i][KeysEnum.FULL_ADDRESS.value],
+                    data[i][KeysEnum.CITY_ID.value],
+                    data[i][KeysEnum.LATITUDE.value],
+                    data[i][KeysEnum.LONGITUTE.value]
+                ))
+                # new_idx.append(i)
+                equals[(data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value])] = [i]
+            else:
+                data[i][KeysEnum.ADDRESS_ID.value] = existed_records[(data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value])]
+
+        insert_query = f"""INSERT INTO Address ({", ".join(keys)})
+                           (SELECT {", ".join([f'r.{key}' for key in keys])}
+                           FROM unnest($1::Address[]) as r)
+                           RETURNING {KeysEnum.ADDRESS_ID.value}, {KeysEnum.LATITUDE.value}, {KeysEnum.LONGITUTE.value}"""
+        addresses = await self.query_with_returning(insert_query, records)
+
+        for address in addresses:
+            for i in equals[(address[KeysEnum.LATITUDE.value], address[KeysEnum.LONGITUTE.value])]:
+                data[i][KeysEnum.ADDRESS_ID.value] = address[KeysEnum.ADDRESS_ID.value]
+
+    async def insert_address_match(self, data):
+        keys = ['website_address', 'real_address_id']
+        records = []
         for offer in data:
-            records.append((offer['Адресс'], offer[KeysEnum.CITY_ID.value]))
+            records.append([offer['Адресс'], offer[KeysEnum.ADDRESS_ID.value]])
 
-        return self.update_or_past(keys, records, KeysEnum.ADDRES.value, 'Address')
+        await self.update_or_past(keys, records, 'website_address', 'Address_Match')
 
-    def update_or_past_house_features(self, data):
+    async def patch_address(self, lat, lon, full_address, offer):
+        while self.lock:
+            await asyncio.sleep(0.05)
+        self.lock = True
+
+        offer[KeysEnum.FULL_ADDRESS.value] = full_address
+        if lat is not None and lon is not None:
+            offer[KeysEnum.LATITUDE.value] = float(lat)
+            offer[KeysEnum.LONGITUTE.value] = float(lon)
+        else:
+            self.lock = False
+            return
+        self.address_pull.append(offer)
+        if len(self.address_pull) < 5:
+            self.lock = False
+            return
+
+        await self.insert_address(self.address_pull)
+        await self.insert_address_match(self.address_pull)
+        await self.update_or_past_house(self.address_pull)
+        await self.update_or_past_listings_static_features(self.address_pull)
+        self.address_pull = []
+        self.lock = False
+
+
+    async def add_address_ids(self, data):
+        addresses = []
+        for offer in data:
+            addresses.append(offer['Адресс'])
+
+        select_query = f"""
+            SELECT * FROM Address_Match WHERE website_address = ANY($1)
+        """
+        values = await self.query_with_returning(select_query, addresses)
+        values = {row[0]: row[1] for row in values}
+
+        not_found = []
+        found = []
+        if len(values) == 0:
+            not_found = data
+        else:
+            for i in range(len(data)):
+                if data[i]['Адресс'] in values:
+                    data[i][KeysEnum.ADDRESS_ID.value] = values[data[i]['Адресс']]
+                    found.append(data[i])
+                else:
+                    not_found.append(data[i])
+        return not_found, found
+
+    async def update_or_past_house(self, data):
         records = []
-        keys = [KeysEnum.ADDRES.value,
+        keys = [KeysEnum.ADDRESS_ID.value,
                 KeysEnum.MAX_FLOOR.value,
                 KeysEnum.HOUSE_SERIE.value,
                 KeysEnum.PASSENGER_ELEVATOR_COUNT.value,
@@ -245,7 +261,7 @@ class DataWorker:
                 KeysEnum.RESIDENTIAL_COMPLEX_NAME.value
                 ]
         for offer in data:
-            records.append((offer['Адресс'],
+            records.append((offer[KeysEnum.ADDRESS_ID.value],
                             offer['Этажей в доме'],
                             offer['Строительная серия'],
                             offer['Пассажирский лифт'],
@@ -261,14 +277,14 @@ class DataWorker:
                             offer['Дом'],
                             offer['Название ЖК'],
                             ))
-        history_keys = [KeysEnum.ADDRES.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
-        return self.update_or_past(keys, records, KeysEnum.ADDRES.value, 'House_Features', history_keys)
+        history_keys = [KeysEnum.ADDRESS_ID.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
+        await self.update_or_past(keys, records, KeysEnum.ADDRESS_ID.value, 'House', history_keys)
 
-    def update_or_past_listings_static_features(self, data):
+    async def update_or_past_listings_static_features(self, data):
         records = []
         keys = [KeysEnum.LISTINGS_STATIC_FEATURES_ID.value,
                 KeysEnum.LISTING_TYPE_ID.value,
-                KeysEnum.ADDRES.value,
+                KeysEnum.ADDRESS_ID.value,
                 KeysEnum.ROOM_COUNT.value,
                 KeysEnum.PROPERTY_TYPE.value,
                 KeysEnum.TOTAL_AREA.value,
@@ -289,7 +305,7 @@ class DataWorker:
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
                             offer[KeysEnum.LISTING_TYPE_ID.value],
-                            offer['Адресс'],
+                            offer[KeysEnum.ADDRESS_ID.value],
                             offer['Число комнат'],
                             offer['Тип жилья'],
                             offer['Общая площадь'],
@@ -307,9 +323,9 @@ class DataWorker:
                             offer['Отделка'],
                             offer[KeysEnum.DESAPEAR_DATE.value],
                             ))
-        return self.update_or_past(keys, records, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
+        return await self.update_or_past(keys, records, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
 
-    def update_or_past_listings(self, data):
+    async def update_or_past_listings(self, data):
         records = []
         keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
         for offer in data:
@@ -318,14 +334,14 @@ class DataWorker:
                             offer['Описание'],
                             offer[KeysEnum.PRICE.value]))
         history_keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
-        idx = self.update_or_past(keys, records, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
+        idx = await self.update_or_past(keys, records, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
         new_rows = []
         for offer in data:
             if offer[KeysEnum.LISTING_ID.value] in idx:
                 new_rows.append(offer)
         return new_rows
 
-    def update_or_past_listings_sale(self, data):
+    async def update_or_past_listings_sale(self, data):
         records = []
         keys = [KeysEnum.LISTINGS_SALE_ID.value,
                 KeysEnum.CONDITIONS.value,
@@ -344,32 +360,32 @@ class DataWorker:
                         KeysEnum.IS_MORTGAGE_AVAILABLE.value,
                         KeysEnum.ONLINE_VIEW.value,
                         KeysEnum.NEGOTIATION.value]
-        return self.update_or_past(keys, records, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
+        return await self.update_or_past(keys, records, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
 
-    def update_or_past_listings_rent(self, data):
+    async def update_or_past_listings_rent(self, data):
         records = []
         keys = [KeysEnum.LISTINGS_RENT_ID.value]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value]))
 
         history_keys = [KeysEnum.LISTINGS_RENT_ID.value]
-        return self.update_or_past(keys, records, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
+        return await self.update_or_past(keys, records, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
 
-    def update_or_past_websites_listings_map(self, data):
+    async def update_or_past_websites_listings_map(self, data):
         records = []
         keys = [KeysEnum.LISTING_ID.value, KeysEnum.WEBSITE_ID.value, KeysEnum.LINK_URL.value]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value], offer[KeysEnum.WEBSITE_ID.value], offer['Ссылка']))
 
-        self.update_or_past(keys, records, 'map_id', 'Websites_Listings_Map')
+        await self.update_or_past(keys, records, 'map_id', 'Websites_Listings_Map')
 
-    def update_or_past_listing_images(self, data):
+    async def update_or_past_listing_images(self, data):
         records = []
         keys = [KeysEnum.LISTING_ID.value, KeysEnum.IMAGE_PATH.value]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value], offer['Путь к картинкам']))
 
-        self.update_or_past(keys, records, 'image_id', 'Listing_Images')
+        await self.update_or_past(keys, records, 'image_id', 'Listing_Images')
 
     def data_dict_flatten(self, data):
         for key in list(data.keys()):
@@ -405,6 +421,7 @@ class DataWorker:
                 data[key] = None
 
     def type_convert(self, data):
+        data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data[KeysEnum.PRICE.value] = DataWorker.type_convert_if_possible(data, KeysEnum.PRICE.value, int)
         data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data['Общая площадь'] = DataWorker.type_convert_if_possible(data, 'Общая площадь', float)
@@ -423,7 +440,7 @@ class DataWorker:
 
     async def save_to_db(self, data):
         offers_with_sellers = []
-        is_sale = True if data[0][KeysEnum.LISTING_TYPE_ID.value] == '1' else False
+        is_sale = True if data[0][KeysEnum.LISTING_TYPE_ID.value] == 1 else False
         for offer in data:
             self.data_dict_flatten(offer)
             self.add_none_fields(offer)
@@ -431,19 +448,18 @@ class DataWorker:
             if offer['Название продаца'] is not None:
                 offers_with_sellers.append(offer)
 
-        self.update_or_past_seller(offers_with_sellers)
-        self.update_or_past_addres(data)
-        self.update_or_past_house_features(data)
-        self.update_or_past_listings_static_features(data)
-        new_rows = self.update_or_past_listings(data)
+        await self.update_or_past_seller(offers_with_sellers)
+        not_found, found = await self.add_address_ids(data)
+        for offer in not_found:
+            self.address_manager.address_queue.put(offer)
+        await self.update_or_past_house(found)
+        await self.update_or_past_listings_static_features(data)
+        new_rows = await self.update_or_past_listings(data)
         if is_sale:
-            self.update_or_past_listings_sale(data)
+            await self.update_or_past_listings_sale(data)
         else:
-            self.update_or_past_listings_rent(data)
+            await self.update_or_past_listings_rent(data)
 
-        self.update_or_past_websites_listings_map(new_rows)
-        self.update_or_past_listing_images(new_rows)
+        await self.update_or_past_websites_listings_map(new_rows)
+        await self.update_or_past_listing_images(new_rows)
         return len(new_rows)
-
-
-

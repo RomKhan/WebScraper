@@ -18,13 +18,16 @@ class DomClickScrapeAll(ScrapeAll):
                            city,
                            listing_type,
                            offers_xpath='//div[@data-e2e-id="offers-list__item"]',
-                           max_page=100)
+                           max_page=100,
+                           offers_per_page=20)
 
     def parse_offer(self, offer):
         try:
             title = offer.xpath('.//a[@data-test="product-snippet-property-offer"]')[0]
             link = title.get('href')
             adress = ' '.join(offer.xpath(".//span[@data-e2-id='product-snippet-address']/text()")).replace('\'', '"')
+            # if not adress.startswith('Москва'):
+            #     logging.info(f'{adress}')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None

@@ -17,18 +17,19 @@ class AvitoScrapeAll(ScrapeAll):
                            city,
                            listing_type,
                            offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]",
-                           max_page=100)
+                           max_page=100,
+                           offers_per_page=50)
 
     def parse_offer(self, offer):
         residential_complex = None
         try:
             link = offer.xpath('.//a[@itemprop="url"]')[0].get('href')
-            adress = offer.xpath(".//div[@data-marker='item-address']/*/p")
-            if len(adress) > 2:
-                residential_complex = adress[0].text
-                adress = adress[1].xpath('.//span/text()')[0].replace('\'', '"')
-            else:
-                adress = adress[0].xpath('.//span/text()')[0].replace('\'', '"')
+            residential_complex_data = offer.xpath(".//div[@data-marker='item-address']/p")
+            if len(residential_complex_data) > 0:
+                residential_complex = residential_complex_data[0].text
+            adress = f'{self.city}, ' + offer.xpath(".//div[@data-marker='item-address']/div//span/text()")[0].replace('\'', '"')
+            # if not adress.startswith('Москва'):
+            #     logging.info(f'{adress}, ЖК: {residential_complex}')
             id = list(filter(None, re.split('_|/', link)))[-1]
         except:
             return False, None
@@ -92,7 +93,7 @@ class AvitoScrapeAll(ScrapeAll):
         try:
             offer_count_text = ''.join(unidecode.unidecode(tree.xpath("//span[starts-with(@class, 'page-title-count')]/text()")[0]).split())
         except:
-             return -1
+            return -1
         return int(offer_count_text)
 
     def get_desk_link(self) -> str:

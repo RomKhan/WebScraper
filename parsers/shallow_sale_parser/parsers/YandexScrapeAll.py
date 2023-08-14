@@ -1,4 +1,5 @@
 import re
+
 import unidecode
 from lxml import html
 from KeysEnum import KeysEnum
@@ -15,7 +16,8 @@ class YandexScrapeAll(ScrapeAll):
                            city,
                            listing_type,
                            offers_xpath="//ol/li[starts-with(@class, 'OffersSerpItem')]",
-                           max_page=25)
+                           max_page=25,
+                           offers_per_page=20)
 
     def parse_offer(self, offer):
         try:
@@ -23,7 +25,9 @@ class YandexScrapeAll(ScrapeAll):
             general_block = offer.xpath(".//div[@class='OffersSerpItem__generalInfoInnerContainer']")[0]
             link = general_block.xpath("./a")[0].get('href')
             id = list(filter(None, re.split('_|/', link)))[-1]
-            adress = ' '.join(general_block.xpath("./div")[0].xpath(".//text()"))
+            adress = f'{self.city}, ' + ' '.join(general_block.xpath("./div")[0].xpath(".//text()"))
+            # if not adress.startswith('Москва'):
+            #     logging.info(f'{adress}')
         except:
             print(id, link)
             return False, None
@@ -106,7 +110,13 @@ class YandexScrapeAll(ScrapeAll):
     def get_count_of_offers(self, content) -> int:
         tree = html.fromstring(content)
         try:
-            offer_count_text = ''.join(unidecode.unidecode(tree.xpath("//title/text()")[0].split(',')[1].split()[0]).split())
+            text = tree.xpath("//title/text()")[0].split(',')[1].split()
+            offer_count_text = []
+            for part in text:
+                if part.isnumeric():
+                    offer_count_text.append(part)
+            offer_count_text = ''.join(offer_count_text)
+            print(offer_count_text)
         except:
              return -1
         return int(offer_count_text)

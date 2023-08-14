@@ -1,8 +1,9 @@
 import atexit
-import os
+import threading
 
-from flask import Flask
-from flask_apscheduler import APScheduler
+from fastapi import FastAPI
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 import db_api
 from db_utils import *
 
@@ -12,23 +13,24 @@ def teardown_db():
 
 
 def create_app():
-    app = Flask(__name__)
-    app.config.from_pyfile('config.py')
-    app.register_blueprint(db_api.bp)
+    app = FastAPI()
+    app.include_router(db_api.router, prefix="/db")
 
-    @app.route("/ping")
+    @app.get("/ping", status_code=200)
     def ping():
-        return "I AM OK!", 200
+        return "I AM OK!"
 
     return app
 
 
 app = create_app()
-# scheduler = APScheduler()
-# scheduler.add_job(id='my_job', func=get_image_loader().download_current_state, trigger='interval', seconds=60)
-# scheduler.init_app(app)
-# scheduler.start()
+address_save_thread = threading.Thread(target=get_address_manager().address_finder)
+address_save_thread.start()
+scheduler = BackgroundScheduler()
+scheduler.add_job(get_image_loader().download_current_state, trigger=IntervalTrigger(seconds=60))
+scheduler.start()
 atexit.register(teardown_db)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)

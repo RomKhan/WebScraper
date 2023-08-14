@@ -54,3 +54,7 @@ class KeysEnum(Enum):
     IMAGE_PATH = 'image_path'
     ONLINE_VIEW = 'online_view'
     NEGOTIATION = 'negotiation'
+    ADDRESS_ID = 'address_id'
+    FULL_ADDRESS = 'full_address'
+    LATITUDE = 'latitude'
+    LONGITUTE = 'longitude'

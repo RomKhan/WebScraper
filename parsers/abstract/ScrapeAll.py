@@ -21,7 +21,8 @@ class ScrapeAll(ScraperAbstract):
                  city,
                  listing_type,
                  offers_xpath,
-                 max_page):
+                 max_page,
+                 offers_per_page):
         ScraperAbstract.__init__(self, website_name, city, listing_type)
         self.url_components = url_components
         self.prev_price = 0
@@ -29,6 +30,7 @@ class ScrapeAll(ScraperAbstract):
         self.last_offers_count = -1
         self.is_end = False
         self.max_page = max_page
+        self.offers_per_page = offers_per_page
 
         self.count_of_parsed = 0
         self.count_of_corrupted = 0
@@ -52,10 +54,9 @@ class ScrapeAll(ScraperAbstract):
 
             if page == 1:
                 offers_count = self.get_count_of_offers(page_source)
-                if offers_count == 0 and self.last_offers_count != 0:
+                if -1 < offers_count < self.max_page * self.offers_per_page:
                     self.is_end = True
-                if offers_count > -1:
-                    self.last_offers_count = offers_count
+                    self.max_page = offers_count // self.offers_per_page + 1
 
             t2 = time.time()
             logging.info(
@@ -82,14 +83,16 @@ class ScrapeAll(ScraperAbstract):
                 url = self.get_desk_link()
                 attempts = 0
                 page = self.current_page
-                self.current_page += 1
                 if len(self.url_queue) > 0:
                     url_temp, attempts_temp, page_temp = self.url_queue.pop(0)
-                    if attempts < 5:
+                    if attempts_temp < 5:
                         url = url_temp
                         attempts = attempts_temp
                         page = page_temp
-                        self.current_page -= 1
+                    else:
+                        self.current_page += 1
+                else:
+                    self.current_page += 1
 
                 thread = threading.Thread(target=self.get_and_parse_page, args=(url, attempts, page, pod[0], pod[1]))
                 thread.start()
