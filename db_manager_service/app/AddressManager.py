@@ -93,8 +93,8 @@ class AddressManager:
                 if self.free_dadata[token][1] < 10000:
                     dadata = self.free_dadata[token][0]
                     self.free_dadata[token][1] += 1
-                if self.free_dadata[token][1] == 10000:
-                    self.free_dadata.pop(0)
+                # if self.free_dadata[token][1] == 10000:
+                #     self.free_dadata.pop(0)
             if dadata is None:
                 time.sleep(300)
                 self.check_for_update()
