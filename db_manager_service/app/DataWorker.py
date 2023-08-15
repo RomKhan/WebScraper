@@ -223,12 +223,9 @@ class DataWorker:
 
 
     async def add_address_ids(self, data):
-        data = copy.deepcopy(data)
         addresses = []
         for offer in data:
             addresses.append(offer['Адресс'])
-            for key in list(set(offer.keys()) - (set(self.adress_keys) | set(self.house_fetures_keys) | set(self.listings_static_keys))):
-                del offer[key]
 
         select_query = f"""
             SELECT * FROM Address_Match WHERE website_address = ANY($1)
@@ -246,7 +243,10 @@ class DataWorker:
                     data[i][KeysEnum.ADDRESS_ID.value] = values[data[i]['Адресс']]
                     found.append(data[i])
                 else:
-                    not_found.append(data[i])
+                    offer = copy.deepcopy(data[i])
+                    for key in list(set(offer.keys()) - (set(self.adress_keys) | set(self.house_fetures_keys) | set(self.listings_static_keys))):
+                        del offer[key]
+                    not_found.append(offer)
         return not_found, found
 
     async def update_or_past_house(self, data):
