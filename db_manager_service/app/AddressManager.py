@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import queue
 import time
 
@@ -6,10 +7,25 @@ import requests
 from dadata import Dadata
 
 
+class MyQueue(queue.Queue):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.size = 0
+
+    def put(self, item, block=True, timeout=None):
+        super().put(item, block, timeout)
+        self.size += 1
+
+    def get(self, block=True, timeout=None):
+        item = super().get(block, timeout)
+        self.size -= 1
+        return item
+
+
 class AddressManager:
     def __init__(self, tokens):
         self.free_dadata = {}
-        self.address_queue = queue.Queue()
+        self.address_queue = MyQueue()
         self.address_history = {}
         # self.tokens_time_to_update = {}
         self.is_active = True
@@ -23,7 +39,10 @@ class AddressManager:
 
     def check_for_update(self):
         for token in self.free_dadata:
-            self.free_dadata[token][1] = self.free_dadata[token][0].get_daily_stats()['services']['suggestions']
+            try:
+                self.free_dadata[token][1] = self.free_dadata[token][0].get_daily_stats()['services']['suggestions']
+            except:
+                continue
             # if time.time() - self.free_dadata[token][2] > 86400:
             #     self.free_dadata[token] = [Dadata(token), 0, time.time()]
 
@@ -96,12 +115,13 @@ class AddressManager:
                 # if self.free_dadata[token][1] == 10000:
                 #     self.free_dadata.pop(0)
             if dadata is None:
-                time.sleep(300)
                 self.check_for_update()
+                logging.info(f'в очереди: {self.address_queue.size}')
+                time.sleep(300)
                 continue
 
             offer = self.address_queue.get()
-            t1 = time.time()
+            # t1 = time.time()
             if offer['Адресс'] in self.address_history:
                 lon, lat, full_address = self.address_history[offer['Адресс']]
             else:

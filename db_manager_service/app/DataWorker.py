@@ -1,4 +1,5 @@
 import asyncio
+import copy
 
 from KeysEnum import KeysEnum
 
@@ -27,6 +28,8 @@ class DataWorker:
         ]
         self.listings_static_keys = [
             KeysEnum.LISTING_ID.value,
+            KeysEnum.LISTING_TYPE_ID.value,
+            KeysEnum.ADDRESS_ID.value,
             'Число комнат',
             'Тип жилья',
             'Общая площадь',
@@ -42,7 +45,8 @@ class DataWorker:
             'Лоджия',
             'Балкон',
             'Отделка',
-            KeysEnum.APPEARING_DATE.value
+            KeysEnum.APPEARING_DATE.value,
+            KeysEnum.DESAPEAR_DATE.value
         ]
         self.listings_keys = [
             KeysEnum.LISTING_ID.value,
@@ -219,9 +223,12 @@ class DataWorker:
 
 
     async def add_address_ids(self, data):
+        data = copy.deepcopy(data)
         addresses = []
         for offer in data:
             addresses.append(offer['Адресс'])
+            for key in list(set(offer.keys()) - (set(self.adress_keys) | set(self.house_fetures_keys) | set(self.listings_static_keys))):
+                del offer[key]
 
         select_query = f"""
             SELECT * FROM Address_Match WHERE website_address = ANY($1)
