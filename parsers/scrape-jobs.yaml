@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shallow-sale-parser
+  namespace: default
+spec:
+  schedule: "0 0 * * *"
+  startingDeadlineSeconds: 60
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            name: shallow-sale-parser
+        spec:
+          initContainers:
+            - name: init-container-sale
+              image: stikeyrs/scraper:init-container
+              env:
+                - name: TYPE
+                  value: sale
+          containers:
+          - name: shallow-sale-parser-cian
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: cian
+              - name: TYPE
+                value: sale
+          - name: shallow-sale-parser-domclick
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: domclick
+              - name: TYPE
+                value: sale
+          - name: shallow-sale-parser-avito
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: avito
+              - name: TYPE
+                value: sale
+          - name: shallow-sale-parser-yandex
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: yandex
+              - name: TYPE
+                value: sale
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: docker-registry-secret
+      backoffLimit: 5 # Максимальное количество попыток рестарта

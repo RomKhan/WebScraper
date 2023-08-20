@@ -5,17 +5,20 @@ from lxml import html
 
 from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class AvitoScrapeAll(ScrapeAll):
-    def __init__(self, url_components, city, website, listing_type):
+    def __init__(self, url_components, city, website, listing_type, min_price):
         ScrapeAll.__init__(self,
                            url_components,
                            website,
                            city,
                            listing_type,
+                           min_price,
                            offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]",
                            max_page=100,
                            offers_per_page=50)

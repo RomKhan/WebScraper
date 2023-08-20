@@ -20,13 +20,14 @@ class ScrapeAll(ScraperAbstract):
                  website_name,
                  city,
                  listing_type,
+                 min_price,
                  offers_xpath,
                  max_page,
                  offers_per_page):
         ScraperAbstract.__init__(self, website_name, city, listing_type)
         self.url_components = url_components
-        self.prev_price = 0
-        self.current_price = 0
+        self.current_price = min_price
+        self.prev_price = self.current_price
         self.last_offers_count = -1
         self.is_end = False
         self.max_page = max_page
@@ -127,7 +128,7 @@ class ScrapeAll(ScraperAbstract):
         if len(offers_dict) > 0:
             saved_count = self.to_database(offers_dict)
             if saved_count == 0 and len(offers) - corrupt_offers > 0:
-                logging.info(f'DON\T Saved {link}')
+                logging.info(f'DON\'T Saved {link}')
         count = len(idx)
         return count, last_price
 

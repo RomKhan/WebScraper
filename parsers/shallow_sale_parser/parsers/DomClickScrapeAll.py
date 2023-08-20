@@ -5,18 +5,21 @@ from lxml import html
 
 from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class DomClickScrapeAll(ScrapeAll):
-    def __init__(self, url_components, city, website, listing_type):
+    def __init__(self, url_components, city, website, listing_type, min_price):
         ScrapeAll.__init__(self,
                            url_components,
                            website,
                            city,
                            listing_type,
+                           min_price,
                            offers_xpath='//div[@data-e2e-id="offers-list__item"]',
                            max_page=100,
                            offers_per_page=20)
@@ -121,11 +124,12 @@ class DomClickScrapeAll(ScrapeAll):
                 break
             elif data[i].startswith('sale_price__gte'):
                 break
-            elif data[i].startswith('sale_price__lte'):
-                break
+            # elif data[i].startswith('sale_price__lte'):
+            #     break
             first_part.append(data[i])
 
         first_part = '&'.join(first_part)
         second_part = '&'.join(data[i + 1:i + 3])
+        # print([first_part, second_part])
 
         return [first_part, second_part]

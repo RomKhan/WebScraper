@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 # app = Flask(__name__)
 app = FastAPI()
 namespace = 'default'
-configmap_name = "cooldown-config"
+configmap_name = "scraper-config"
 website_cooldowns = dict()
 buffer = dict()
 
@@ -54,7 +54,7 @@ async def reserve_pod(request_json: dict):
     if website not in website_cooldowns:
         website_cooldowns[website] = get_cooldown(website)
     cooldown = website_cooldowns[website]
-    config.load_incluster_config()  # Если ваше приложение работает внутри кластера Kubernetes
+    config.load_incluster_config()
 
     v1 = client.CoreV1Api()
     pods = v1.list_namespaced_pod(namespace, label_selector="app=chrome-driver-app")
@@ -103,7 +103,7 @@ def get_cooldown(website):
     config_map = v1.read_namespaced_config_map(configmap_name, namespace)
 
     cooldown_data = config_map.data
-    cooldown = cooldown_data.get(website, "0")
+    cooldown = cooldown_data.get(f'{website}_cooldown', "0")
 
     return int(cooldown)
 

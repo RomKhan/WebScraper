@@ -16,8 +16,8 @@ class ScraperAbstract:
         self.current_page = 1
         self.db_flow_url = 'http://db-api-service:8080/db'
         self.chrome_service = 'http://api-getaway-service:8083'
-        # self.db_flow_url = 'http://192.168.100.53:31287/db'
-        # self.chrome_service = 'http://192.168.100.53:32075/'
+        # self.db_flow_url = 'http://192.168.100.53:31836/db'
+        # self.chrome_service = 'http://192.168.100.53:32219'
         self.website_name = website_name
         self.city = city
         self.website_db_id = int(requests.get(self.db_flow_url+'/getWebsiteId', params={'website': website_name}).text.strip('"'))

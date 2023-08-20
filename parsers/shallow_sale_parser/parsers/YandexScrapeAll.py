@@ -4,17 +4,20 @@ import unidecode
 from lxml import html
 from KeysEnum import KeysEnum
 from abstract.ScrapeAll import ScrapeAll
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class YandexScrapeAll(ScrapeAll):
-    def __init__(self, url_components, city, website, listing_type):
+    def __init__(self, url_components, city, website, listing_type, min_price):
         ScrapeAll.__init__(self,
                            url_components,
                            website,
                            city,
                            listing_type,
+                           min_price,
                            offers_xpath="//ol/li[starts-with(@class, 'OffersSerpItem')]",
                            max_page=25,
                            offers_per_page=20)
