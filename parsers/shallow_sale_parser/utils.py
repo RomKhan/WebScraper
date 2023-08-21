@@ -58,14 +58,18 @@ def save_state(website, city, type, min_price):
         namespace=namespace,
         body=patch
     )
-    # v1.replace_namespaced_config_map(name=configmap_name, namespace=namespace, body=configmap)
 
 
 def reset_state(website, type):
     configmap, v1 = get_configmap()
     key = f'{website}_{type}_state'
-    configmap.data[key] = f'{get_cities(configmap)[0]}:{0}'
-    v1.replace_namespaced_config_map(name=configmap_name, namespace=namespace, body=configmap)
+    patch = [{"op": "replace", "path": f"/data/{key}", "value": f'{get_cities(configmap)[0]}:{0}'}]
+
+    v1.patch_namespaced_config_map(
+        name=configmap_name,
+        namespace=namespace,
+        body=patch
+    )
 
 
 def parse_all(scraper_type, website, type):

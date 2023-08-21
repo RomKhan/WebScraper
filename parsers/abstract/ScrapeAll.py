@@ -50,7 +50,7 @@ class ScrapeAll(ScraperAbstract):
             if count == 0:
                 self.url_queue.append([url, attempts + 1, page])
 
-            if last_price is not None and last_price > self.current_price:
+            if last_price is not None and last_price > self.current_price and page != self.max_page:
                 self.current_price = last_price
 
             if page == 1:
