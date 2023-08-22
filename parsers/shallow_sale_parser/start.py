@@ -13,8 +13,8 @@ from parsers.YandexScrapeAll import YandexScrapeAll
 
 def main():
     logging.info(f'Количество активных потоков: {threading.active_count()}')
-    # server_url = 'http://db-api-service:8080'
-    server_url = 'http://192.168.100.53:30058/db'
+    server_url = 'http://db-api-service:8080'
+    # server_url = 'http://192.168.100.53:30058/db'
     connected = False
     while not connected:
         try:
@@ -26,10 +26,10 @@ def main():
 
     print('pass the ping')
 
-    # website_name = os.environ.get('WEBSITE_NAME')
-    # type = os.environ.get('TYPE')
-    website_name='domclick'
-    type='rent'
+    website_name = os.environ.get('WEBSITE_NAME')
+    type = os.environ.get('TYPE')
+    # website_name='domclick'
+    # type='rent'
 
     # if is_exist(website_name, type):
     #     return

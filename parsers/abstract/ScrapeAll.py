@@ -4,10 +4,10 @@ import time
 
 from lxml import html
 
-# from KeysEnum import KeysEnum
-# from abstract.ScraperAbstract import ScraperAbstract
-from parsers.KeysEnum import KeysEnum
-from parsers.abstract.ScraperAbstract import ScraperAbstract
+from KeysEnum import KeysEnum
+from abstract.ScraperAbstract import ScraperAbstract
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScraperAbstract import ScraperAbstract
 import logging
 
 

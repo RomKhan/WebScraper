@@ -1,8 +1,8 @@
 import logging
 from enum import Enum
 import requests
-# from KeysEnum import KeysEnum
-from parsers.KeysEnum import KeysEnum
+from KeysEnum import KeysEnum
+# from parsers.KeysEnum import KeysEnum
 
 class ListingMode(Enum):
     rent = 0
@@ -12,10 +12,10 @@ class ListingMode(Enum):
 class ScraperAbstract:
     def __init__(self, website_name, city, listing_type):
         self.current_page = 1
-        # self.db_flow_url = 'http://db-api-service:8080/db'
-        # self.chrome_service = 'http://api-getaway-service:8083'
-        self.db_flow_url = 'http://192.168.100.53:30058/db'
-        self.chrome_service = 'http://192.168.100.53:32389'
+        self.db_flow_url = 'http://db-api-service:8080/db'
+        self.chrome_service = 'http://api-getaway-service:8083'
+        # self.db_flow_url = 'http://192.168.100.53:30058/db'
+        # self.chrome_service = 'http://192.168.100.53:32389'
         self.website_name = website_name
         self.listing_type = listing_type
         self.city = city

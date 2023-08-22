@@ -3,10 +3,10 @@ import re
 import unidecode
 from lxml import html
 
-# from KeysEnum import KeysEnum
-# from abstract.ScrapeAll import ScrapeAll
-from parsers.KeysEnum import KeysEnum
-from parsers.abstract.ScrapeAll import ScrapeAll
+from KeysEnum import KeysEnum
+from abstract.ScrapeAll import ScrapeAll
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
