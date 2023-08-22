@@ -2,10 +2,10 @@ import re
 
 import unidecode
 from lxml import html
-from KeysEnum import KeysEnum
-from abstract.ScrapeAll import ScrapeAll
-# from parsers.KeysEnum import KeysEnum
-# from parsers.abstract.ScrapeAll import ScrapeAll
+# from KeysEnum import KeysEnum
+# from abstract.ScrapeAll import ScrapeAll
+from parsers.KeysEnum import KeysEnum
+from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -45,6 +45,10 @@ class YandexScrapeAll(ScrapeAll):
         is_mortgage_available = None
         negotiation = None
         online_view = None
+        is_communal_payments_included = None
+        commission = None
+        prepayment = None
+        pledge = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(general_block)
             price = ''.join(unidecode.unidecode(offer.xpath('.//span[@class="price"]//text()')[0][:-2]).split())
@@ -59,12 +63,29 @@ class YandexScrapeAll(ScrapeAll):
             tags = self.parse_if_exists(offer, './/div[@class="OffersSerpItem__tagsContainer"]/div//text()')
             if tags is not None:
                 for tag in tags:
+                    tag = str(tag).replace('\xa0', ' ')
                     if tag == 'ипотека':
                         is_mortgage_available = True
                     elif tag == 'торг':
                         negotiation = True
+                    elif tag == 'без торга':
+                        negotiation = False
                     elif tag == 'онлайн показ':
                         online_view = True
+                    elif tag == 'цена с КУ':
+                        is_communal_payments_included = True
+                    elif tag == 'цена без КУ':
+                        is_communal_payments_included = True
+                    elif tag == 'залог':
+                        pledge = True
+                    elif tag == 'без залога':
+                        pledge = True
+                    elif tag == 'без комиссии':
+                        commission = 0
+                    elif tag.startswith('комиссия'):
+                        commission = int(tag.split()[1][:-1])
+                    elif tag.startswith('предоплата'):
+                        prepayment = int(tag.split()[1][:-1])
                     elif tag != 'хорошая цена':
                         logging.warning(f'НОВЫЙ ТАГ - {tag}')
 
@@ -88,7 +109,11 @@ class YandexScrapeAll(ScrapeAll):
                       'Название ЖК': residential_complex,
                       'Ипотека': is_mortgage_available,
                       'Торг': negotiation,
-                      'Онлайн показ': online_view
+                      'Онлайн показ': online_view,
+                      'Коммуналньые платежи': is_communal_payments_included,
+                      'Комиссия': commission,
+                      'Предоплата': prepayment,
+                      'Залог': pledge
                       }
         return offer_data, id
 
@@ -113,13 +138,13 @@ class YandexScrapeAll(ScrapeAll):
     def get_count_of_offers(self, content) -> int:
         tree = html.fromstring(content)
         try:
-            text = tree.xpath("//title/text()")[0].split(',')[1].split()
-            offer_count_text = []
-            for part in text:
-                if part.isnumeric():
-                    offer_count_text.append(part)
-            offer_count_text = ''.join(offer_count_text)
-            print(offer_count_text)
+            offer_count_text = tree.xpath("//div[@itemprop='offers']/meta[@itemprop='offerCount']")[0].get('content')
+            # offer_count_text = []
+            # for part in text:
+            #     if part.isnumeric():
+            #         offer_count_text.append(part)
+            # offer_count_text = ''.join(offer_count_text)
+            # print(offer_count_text)
         except:
              return -1
         return int(offer_count_text)

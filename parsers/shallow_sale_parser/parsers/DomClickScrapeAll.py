@@ -3,10 +3,10 @@ import re
 import unidecode
 from lxml import html
 
-from KeysEnum import KeysEnum
-from abstract.ScrapeAll import ScrapeAll
-# from parsers.KeysEnum import KeysEnum
-# from parsers.abstract.ScrapeAll import ScrapeAll
+# from KeysEnum import KeysEnum
+# from abstract.ScrapeAll import ScrapeAll
+from parsers.KeysEnum import KeysEnum
+from parsers.abstract.ScrapeAll import ScrapeAll
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -47,7 +47,11 @@ class DomClickScrapeAll(ScrapeAll):
         build_date = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(title)
-            price = ''.join(unidecode.unidecode(offer.xpath('.//div[@data-e2e-id="product-snippet-price-sale"]/p/text()')[0][:-2]).split())
+            if self.listing_type == 'sale':
+                price = ''.join(unidecode.unidecode(offer.xpath('.//div[@data-e2e-id="product-snippet-price-sale"]/p/text()')[0][:-2]).split())
+            elif self.listing_type == 'rent':
+                price = ''.join(unidecode.unidecode(
+                    offer.xpath('.//div[@data-e2e-id="product-snippet-price-rent"]/p/text()')[0]).split())
             description_block = self.parse_if_exists(offer, './/a[@data-test="product-snippet-property-offer"]/../../div/div/text()')
             if description_block is not None:
                 description = description_block[0].replace('\'', '"')
@@ -110,10 +114,10 @@ class DomClickScrapeAll(ScrapeAll):
         if self.current_page < 2 and self.prev_price == 0:
             return f'{self.url_components[0]}&{self.url_components[1]}&offset=0'
         elif self.current_page < 2:
-            return f'{self.url_components[0]}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset=0'
+            return f'{self.url_components[0]}&{self.url_components[1]}={self.prev_price}&{self.url_components[2]}&offset=0'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&{self.url_components[1]}&offset={(self.current_page - 1) * 20}'
-        return f'{self.url_components[0]}&{self.url_components[1]}&sale_price__gte={self.prev_price}&offset={(self.current_page - 1)* 20}'
+            return f'{self.url_components[0]}&{self.url_components[2]}&offset={(self.current_page - 1) * 20}'
+        return f'{self.url_components[0]}&{self.url_components[1]}={self.prev_price}&{self.url_components[2]}&offset={(self.current_page - 1)* 20}'
 
     @staticmethod
     def parse_link(url):
@@ -124,12 +128,15 @@ class DomClickScrapeAll(ScrapeAll):
                 break
             elif data[i].startswith('sale_price__gte'):
                 break
+            elif data[i].startswith('rent_price__gte'):
+                break
             # elif data[i].startswith('sale_price__lte'):
             #     break
             first_part.append(data[i])
 
         first_part = '&'.join(first_part)
-        second_part = '&'.join(data[i + 1:i + 3])
+        second_part = '&'.join([data[i].split('=')[0]])
+        third_part = '&'.join(data[i + 1:i + 3])
         # print([first_part, second_part])
 
-        return [first_part, second_part]
+        return [first_part, second_part, third_part]

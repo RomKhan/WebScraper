@@ -4,10 +4,10 @@ import time
 
 from lxml import html
 
-from KeysEnum import KeysEnum
-from abstract.ScraperAbstract import ScraperAbstract
-# from parsers.KeysEnum import KeysEnum
-# from parsers.abstract.ScraperAbstract import ScraperAbstract
+# from KeysEnum import KeysEnum
+# from abstract.ScraperAbstract import ScraperAbstract
+from parsers.KeysEnum import KeysEnum
+from parsers.abstract.ScraperAbstract import ScraperAbstract
 import logging
 
 
@@ -75,6 +75,7 @@ class ScrapeAll(ScraperAbstract):
     def iter(self):
         self.current_page = 1
         self.prev_price = self.current_price
+        logging.info(f'Количество активных потоков: {threading.active_count()}')
         while self.current_page <= self.max_page:
             pods = self.reserve_pods()
             if len(pods) == 0:

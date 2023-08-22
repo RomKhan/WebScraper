@@ -22,5 +22,7 @@ data:
       "avito_sale_Екатеринбург": "https://www.avito.ru/ekaterinburg/kvartiry/prodam?bt=1&pmin=100000&p=1&s=1",
       "yandex_sale_Москва": "https://realty.ya.ru/moskva/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1",
       "yandex_sale_Санкт-Петербург": "https://realty.ya.ru/sankt-peterburg/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1",
-      "yandex_sale_Екатеринбург": "https://realty.ya.ru/ekaterinburg/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1"
+      "yandex_sale_Екатеринбург": "https://realty.ya.ru/ekaterinburg/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1",
+      "yandex_rent_Москва": "https://realty.ya.ru/moskva/snyat/kvartira/?sort=PRICE&priceMin=10000&page=1",
+      "domclick_rent_Москва": "https://domclick.ru/search?deal_type=rent&category=living&offer_type=flat&offer_type=layout&rent_price__gte=10000&sort=price&sort_dir=asc&offset=0"
     }

@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 
 import requests
@@ -11,8 +12,9 @@ from parsers.YandexScrapeAll import YandexScrapeAll
 
 
 def main():
-    server_url = 'http://db-api-service:8080'
-    # server_url = 'http://192.168.100.53:31836/db'
+    logging.info(f'Количество активных потоков: {threading.active_count()}')
+    # server_url = 'http://db-api-service:8080'
+    server_url = 'http://192.168.100.53:30058/db'
     connected = False
     while not connected:
         try:
@@ -24,10 +26,10 @@ def main():
 
     print('pass the ping')
 
-    website_name = os.environ.get('WEBSITE_NAME')
-    type = os.environ.get('TYPE')
-    # website_name='yandex'
-    # type='sale'
+    # website_name = os.environ.get('WEBSITE_NAME')
+    # type = os.environ.get('TYPE')
+    website_name='domclick'
+    type='rent'
 
     # if is_exist(website_name, type):
     #     return

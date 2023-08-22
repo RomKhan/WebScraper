@@ -62,7 +62,11 @@ class DataWorker:
             'Онлайн показ'
         ]
         self.lisitng_rent_keys = [
-            KeysEnum.LISTING_ID.value
+            KeysEnum.LISTING_ID.value,
+            'Коммуналньые платежи',
+            'Комиссия',
+            'Предоплата',
+            'Залог'
         ]
         self.website_listings_map_keys = [
             'Ссылка'
@@ -334,13 +338,28 @@ class DataWorker:
 
     async def update_or_past_listings(self, data):
         records = []
-        keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
+        keys = [KeysEnum.LISTING_ID.value,
+                KeysEnum.SELLER_NAME.value,
+                KeysEnum.DESCRIPTION.value,
+                KeysEnum.PRICE.value,
+                KeysEnum.ONLINE_VIEW.value,
+                KeysEnum.NEGOTIATION.value
+                ]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
                             offer['Название продаца'],
                             offer['Описание'],
-                            offer[KeysEnum.PRICE.value]))
-        history_keys = [KeysEnum.LISTING_ID.value, KeysEnum.SELLER_NAME.value, KeysEnum.DESCRIPTION.value, KeysEnum.PRICE.value]
+                            offer[KeysEnum.PRICE.value],
+                            offer['Торг'],
+                            offer['Онлайн показ']
+                            ))
+        history_keys = [KeysEnum.LISTING_ID.value,
+                        KeysEnum.SELLER_NAME.value,
+                        KeysEnum.DESCRIPTION.value,
+                        KeysEnum.PRICE.value,
+                        KeysEnum.ONLINE_VIEW.value,
+                        KeysEnum.NEGOTIATION.value
+                        ]
         idx = await self.update_or_past(keys, records, KeysEnum.LISTING_ID.value, 'Listings', history_keys)
         new_rows = []
         for offer in data:
@@ -352,30 +371,37 @@ class DataWorker:
         records = []
         keys = [KeysEnum.LISTINGS_SALE_ID.value,
                 KeysEnum.CONDITIONS.value,
-                KeysEnum.IS_MORTGAGE_AVAILABLE.value,
-                KeysEnum.ONLINE_VIEW.value,
-                KeysEnum.NEGOTIATION.value]
+                KeysEnum.IS_MORTGAGE_AVAILABLE.value
+                ]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
                             offer['Условия сделки'],
-                            offer['Ипотека'],
-                            offer['Торг'],
-                            offer['Онлайн показ']
+                            offer['Ипотека']
                             ))
         history_keys = [KeysEnum.LISTINGS_SALE_ID.value,
                         KeysEnum.CONDITIONS.value,
-                        KeysEnum.IS_MORTGAGE_AVAILABLE.value,
-                        KeysEnum.ONLINE_VIEW.value,
-                        KeysEnum.NEGOTIATION.value]
+                        KeysEnum.IS_MORTGAGE_AVAILABLE.value]
         return await self.update_or_past(keys, records, KeysEnum.LISTINGS_SALE_ID.value, 'Listings_Sale', history_keys)
 
     async def update_or_past_listings_rent(self, data):
         records = []
-        keys = [KeysEnum.LISTINGS_RENT_ID.value]
+        keys = [KeysEnum.LISTINGS_RENT_ID.value,
+                KeysEnum.IS_COMMUNAL_PAYMENTS_INCLUDED.value,
+                KeysEnum.PLEDGE.value,
+                KeysEnum.COMMISSION.value,
+                KeysEnum.PREPAYMENT.value]
         for offer in data:
-            records.append((offer[KeysEnum.LISTING_ID.value]))
+            records.append((offer[KeysEnum.LISTING_ID.value],
+                            offer['Коммуналньые платежи'],
+                            offer['Комиссия'],
+                            offer['Предоплата'],
+                            offer['Залог']))
 
-        history_keys = [KeysEnum.LISTINGS_RENT_ID.value]
+        history_keys = [KeysEnum.LISTINGS_RENT_ID.value,
+                        KeysEnum.IS_COMMUNAL_PAYMENTS_INCLUDED.value,
+                        KeysEnum.PLEDGE.value,
+                        KeysEnum.COMMISSION.value,
+                        KeysEnum.PREPAYMENT.value]
         return await self.update_or_past(keys, records, KeysEnum.LISTINGS_RENT_ID.value, 'Listings_Rent', history_keys)
 
     async def update_or_past_websites_listings_map(self, data):

@@ -58,3 +58,7 @@ class KeysEnum(Enum):
     FULL_ADDRESS = 'full_address'
     LATITUDE = 'latitude'
     LONGITUTE = 'longitude'
+    IS_COMMUNAL_PAYMENTS_INCLUDED = 'is_communal_payments_included'
+    PLEDGE = 'pledge'
+    COMMISSION = 'commission'
+    PREPAYMENT = 'prepayment'

@@ -9,8 +9,8 @@ configmap_name = "scraper-config"
 
 
 def get_configmap():
-    # config.load_kube_config()
-    config.load_incluster_config()
+    config.load_kube_config()
+    # config.load_incluster_config()
     v1 = client.CoreV1Api()
     configmap = v1.read_namespaced_config_map(name=configmap_name, namespace=namespace)
     return configmap, v1
