@@ -52,3 +52,58 @@ spec:
           imagePullSecrets:
             - name: docker-registry-secret
       backoffLimit: 5 # Максимальное количество попыток рестарта
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shallow-rent-parser
+  namespace: default
+spec:
+  schedule: "0 18 * * *"
+  startingDeadlineSeconds: 60
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            name: shallow-rent-parser
+        spec:
+          initContainers:
+            - name: init-container-rent
+              image: stikeyrs/scraper:init-container
+              env:
+                - name: TYPE
+                  value: rent
+          containers:
+          - name: shallow-rent-parser-cian
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: cian
+              - name: TYPE
+                value: rent
+          - name: shallow-rent-parser-domclick
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: domclick
+              - name: TYPE
+                value: rent
+          - name: shallow-rent-parser-avito
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: avito
+              - name: TYPE
+                value: rent
+          - name: shallow-rent-parser-yandex
+            image: stikeyrs/scraper:shallow_sale_parser
+            env:
+              - name: WEBSITE_NAME
+                value: yandex
+              - name: TYPE
+                value: rent
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: docker-registry-secret
+      backoffLimit: 5 # Максимальное количество попыток рестарта

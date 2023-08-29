@@ -112,7 +112,7 @@ class DomClickScrapeAll(ScrapeAll):
 
     def get_desk_link(self) -> str:
         if self.current_page < 2 and self.prev_price == 0:
-            return f'{self.url_components[0]}&{self.url_components[1]}&offset=0'
+            return f'{self.url_components[0]}&{self.url_components[2]}&offset=0'
         elif self.current_page < 2:
             return f'{self.url_components[0]}&{self.url_components[1]}={self.prev_price}&{self.url_components[2]}&offset=0'
         elif self.prev_price == 0:

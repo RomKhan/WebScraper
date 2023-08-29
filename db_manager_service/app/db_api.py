@@ -37,8 +37,12 @@ async def get_city_id(city: str):
 @router.get('/getListingTypeId', status_code=200)
 async def get_listing_type_id(listing_type: str):
     dataworker = await get_dataworker()
-    return str(await dataworker.get_by_condition('Listing_Type', 'listing_type_id', listing_type, 'listing_type_name'))
-
+    id = await dataworker.get_by_condition('Listing_Type', 'listing_type_id', listing_type, 'listing_type_name')
+    if listing_type == 'sale':
+        dataworker.sale_id = id
+    elif listing_type == 'rent':
+        dataworker.rent_id = id
+    return str(id)
 
 @router.post('/saveImages', status_code=200)
 async def load_images(data: dict):

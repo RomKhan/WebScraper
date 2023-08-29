@@ -28,8 +28,8 @@ def main():
 
     website_name = os.environ.get('WEBSITE_NAME')
     type = os.environ.get('TYPE')
-    # website_name='domclick'
-    # type='rent'
+    # website_name='yandex'
+    # type='sale'
 
     # if is_exist(website_name, type):
     #     return

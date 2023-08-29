@@ -62,3 +62,5 @@ class KeysEnum(Enum):
     PLEDGE = 'pledge'
     COMMISSION = 'commission'
     PREPAYMENT = 'prepayment'
+    ROOMS_TYPE = 'rooms_type'
+    RENTAL_PERIOD = 'rental_period'

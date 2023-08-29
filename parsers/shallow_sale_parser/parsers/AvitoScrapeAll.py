@@ -44,6 +44,13 @@ class AvitoScrapeAll(ScrapeAll):
         name = None
         flat_flour = None
         max_flours = None
+        commission = None
+        pledge = None
+        rooms_type = None
+        balcony_count = None
+        loggia_count = None
+        combined_bathroom_count = None
+        separate_bathroom_count = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(offer)
             price = offer.xpath('.//meta[@itemprop="price"]')[0].get('content')
@@ -53,6 +60,41 @@ class AvitoScrapeAll(ScrapeAll):
             user_atag = self.parse_if_exists(offer, './/div[contains(@class, "item-sellerInfo")]/div[contains(@class, "item-userInfo")]/*/a/p/text()')
             if user_atag is not None:
                 name = user_atag[0].replace('\'', '"')
+            tags = self.parse_if_exists(offer, './/div[contains(@class, "item-autoParamsStep")]/p/text()')
+            if tags is not None:
+                tags = tags[0].lower().replace('\xa0', ' ').split(', ')
+                for tag in tags:
+                    tag = tag.strip()
+                    if tag == 'балкон':
+                        balcony_count = '1'
+                    elif tag == 'лоджия':
+                        loggia_count = '1'
+                    elif tag == 'без комиссии':
+                        commission = 0
+                    elif tag.startswith('комиссия'):
+                        commission = int(tag.split()[1][:-1])
+                    elif tag == 'без залога':
+                        pledge = 0
+                    elif tag.endswith('залог'):
+                        pledge = int(''.join(filter(str.isdigit, tag)))
+                    elif tag.startswith('комнаты'):
+                        rooms_type = tag.split()[1]
+                    elif tag == 'смежные' or tag == 'изолированные':
+                        rooms_type += f', {tag}'
+                    elif tag.startswith('санузел'):
+                        tag = tag.split()[1]
+                        if tag == 'раздельный':
+                            separate_bathroom_count = '1'
+                        elif tag == 'совмещённый':
+                            combined_bathroom_count = '1'
+                    elif tag == 'раздельный':
+                        separate_bathroom_count = '1'
+                    elif tag == 'совмещённый':
+                        combined_bathroom_count = '1'
+                    else:
+                        logging.warning(f'НОВЫЙ ТАГ - {tag}, ссылка: {link}, все таги: {", ".join(tags)}')
+
+
         except Exception as e:
             logging.warning(
                 f'can\'t parse listing, link: {link}, error: {e}'
@@ -70,7 +112,15 @@ class AvitoScrapeAll(ScrapeAll):
                       'Название продаца': name,
                       'Этаж квартиры': flat_flour,
                       'Этажей в доме': max_flours,
-                      'Название ЖК': residential_complex}
+                      'Название ЖК': residential_complex,
+                      'Комиссия': commission,
+                      'Залог': pledge,
+                      'Тип комнат': rooms_type,
+                      'Балкон': balcony_count,
+                      'Лоджия': loggia_count,
+                      'Совмещенный санузел': combined_bathroom_count,
+                      'Раздельный санузел': separate_bathroom_count,
+                      }
         return offer_data, id
 
 
@@ -81,8 +131,11 @@ class AvitoScrapeAll(ScrapeAll):
             temp = title.pop(1)
             title[1] = ','.join([temp, title[1]])
         if title[0][0].isdigit():
-            rooms_count = title[0].split('-')
+            rooms_count = title[0].split('-')[0]
             house_type = title[0].split()[1]
+        elif title[0].startswith('Доля') or title[0].startswith('Аукцион'):
+            rooms_count = '-1'
+            house_type = title[0]
         else:
             rooms_count = '0'
             house_type = title[0]
@@ -94,6 +147,8 @@ class AvitoScrapeAll(ScrapeAll):
     def get_count_of_offers(self, content) -> int:
         tree = html.fromstring(content)
         try:
+            if self.parse_if_exists(content, "//div[starts-with(@class, 'no-results-root')]") is not None:
+                return 0
             offer_count_text = ''.join(unidecode.unidecode(tree.xpath("//span[starts-with(@class, 'page-title-count')]/text()")[0]).split())
         except:
             return -1

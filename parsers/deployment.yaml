@@ -19,28 +19,28 @@ spec:
             - name: WEBSITE_NAME
               value: cian
             - name: TYPE
-              value: sale
+              value: rent
         - name: shallow-sale-parser-domclick-moskow
           image: stikeyrs/scraper:shallow_sale_parser
           env:
             - name: WEBSITE_NAME
               value: domclick
             - name: TYPE
-              value: sale
+              value: rent
         - name: shallow-sale-parser-avito-moskow
           image: stikeyrs/scraper:shallow_sale_parser
           env:
             - name: WEBSITE_NAME
               value: avito
             - name: TYPE
-              value: sale
+              value: rent
         - name: shallow-sale-parser-yandex-moskow
           image: stikeyrs/scraper:shallow_sale_parser
           env:
             - name: WEBSITE_NAME
               value: yandex
             - name: TYPE
-              value: sale
+              value: rent
 #      restartPolicy: OnFailure  # Политика перезапуска контейнера
       imagePullSecrets:
         - name: docker-registry-secret

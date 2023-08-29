@@ -77,16 +77,16 @@ class YandexScrapeAll(ScrapeAll):
                     elif tag == 'цена без КУ':
                         is_communal_payments_included = True
                     elif tag == 'залог':
-                        pledge = True
+                        pledge = -1
                     elif tag == 'без залога':
-                        pledge = True
+                        pledge = 0
                     elif tag == 'без комиссии':
                         commission = 0
                     elif tag.startswith('комиссия'):
                         commission = int(tag.split()[1][:-1])
                     elif tag.startswith('предоплата'):
                         prepayment = int(tag.split()[1][:-1])
-                    elif tag != 'хорошая цена':
+                    elif tag != 'хорошая цена' and 'кешбэк' not in tag:
                         logging.warning(f'НОВЫЙ ТАГ - {tag}')
 
 
@@ -151,16 +151,17 @@ class YandexScrapeAll(ScrapeAll):
 
     def get_desk_link(self) -> str:
         if self.current_page < 2 and self.prev_price == 0:
-            return f'{self.url_components[0]}'
+            return f'{self.url_components[0]}&{self.url_components[1]}'
         elif self.current_page < 2:
-            return f'{self.url_components[0]}&priceMin={self.prev_price}'
+            return f'{self.url_components[0]}&priceMin={self.prev_price}&{self.url_components[1]}'
         elif self.prev_price == 0:
-            return f'{self.url_components[0]}&page={self.current_page-1}'
-        return f'{self.url_components[0]}&priceMin={self.prev_price}&page={self.current_page-1}'
+            return f'{self.url_components[0]}&{self.url_components[1]}&page={self.current_page-1}'
+        return f'{self.url_components[0]}&priceMin={self.prev_price}&{self.url_components[1]}&page={self.current_page-1}'
 
     @staticmethod
     def parse_link(url):
         data = url.split('&')
         first_part = data[0]
+        second_part = data[2]
 
-        return [first_part]
+        return [first_part, second_part]

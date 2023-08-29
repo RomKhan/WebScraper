@@ -51,9 +51,13 @@ class CianScrapeAll(ScrapeAll):
         flat_flour = None
         max_flours = None
         residential_complex = None
+        rental_period = None
+        is_communal_payments_included = None
+        commission = None
+        pledge = None
         try:
             rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(link_area[0])
-            price = ''.join(unidecode.unidecode(link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0][:-2]).split())
+            price = ''.join(filter(str.isdigit, link_area[0].xpath('.//span[@data-mark="MainPrice"]/span/text()')[0]))
             residential_complex = self.parse_if_exists(link_area[0], './/div[@data-name="ContentRow"]/a/text()')
             if residential_complex is not None:
                 residential_complex = residential_complex[0].replace('\'', '"')
@@ -68,6 +72,25 @@ class CianScrapeAll(ScrapeAll):
             else:
                 trader_type, name = trader_data[:2]
                 name = name.replace('\'', '"')
+            tags = self.parse_if_exists(offer, './/p[@data-mark="PriceInfo"]/text()')
+            if tags is not None:
+                tags = tags[0].lower().replace('\xa0', ' ').split(',')
+                rental_period = tags.pop(0)
+                for tag in tags:
+                    tag = tag.strip()
+                    if tag.startswith('комм.'):
+                        is_communal_payments_included = True
+                    elif tag == 'без комиссии':
+                        commission = 0
+                    elif tag.startswith('комиссия'):
+                        commission = int(tag.split()[1][:-1])
+                    elif tag == 'без залога':
+                        pledge = 0
+                    elif tag.startswith('залог'):
+                        pledge = int(''.join(filter(str.isdigit, tag)))
+                    else:
+                        logging.warning(f'НОВЫЙ ТАГ - {tag}')
+
         except Exception as e:
             logging.warning(
                 f'can\'t parse listing, link: {link}, error: {e}'
@@ -86,7 +109,12 @@ class CianScrapeAll(ScrapeAll):
                       'Название продаца': name,
                       'Этаж квартиры': flat_flour,
                       'Этажей в доме': max_flours,
-                      'Название ЖК': residential_complex}
+                      'Название ЖК': residential_complex,
+                      'Срок аренды': rental_period,
+                      'Коммуналньые платежи': is_communal_payments_included,
+                      'Комиссия': commission,
+                      'Залог': pledge
+                      }
         return offer_data, id
 
 

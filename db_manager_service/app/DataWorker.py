@@ -1,11 +1,14 @@
 import asyncio
 import copy
+import logging
 
 from KeysEnum import KeysEnum
 
 
 class DataWorker:
     def __init__(self, async_pull, address_manager):
+        self.rent_id = None
+        self.sale_id = None
         self.seller_keys = ['Название продаца', 'Тип продаца']
         self.lisitng_type_keys = ['Тип обьявления']
         self.adress_keys = [KeysEnum.ADDRESS_ID.value, 'Адресс', KeysEnum.CITY_ID.value]
@@ -46,27 +49,29 @@ class DataWorker:
             'Балкон',
             'Отделка',
             KeysEnum.APPEARING_DATE.value,
-            KeysEnum.DESAPEAR_DATE.value
+            KeysEnum.DESAPEAR_DATE.value,
+            'Тип комнат'
         ]
         self.listings_keys = [
             KeysEnum.LISTING_ID.value,
             KeysEnum.PRICE.value,
             KeysEnum.DESAPEAR_DATE.value,
+            'Торг',
+            'Онлайн показ',
             'Описание'
         ]
         self.lisitng_sale_keys = [
             KeysEnum.LISTING_ID.value,
             'Условия сделки',
-            'Ипотека',
-            'Торг',
-            'Онлайн показ'
+            'Ипотека'
         ]
         self.lisitng_rent_keys = [
             KeysEnum.LISTING_ID.value,
             'Коммуналньые платежи',
             'Комиссия',
             'Предоплата',
-            'Залог'
+            'Залог',
+            'Срок аренды'
         ]
         self.website_listings_map_keys = [
             'Ссылка'
@@ -311,7 +316,8 @@ class DataWorker:
                 KeysEnum.LOGGIA_COUNT.value,
                 KeysEnum.BALCONY_COUNT.value,
                 KeysEnum.DECORATION_FINISHING_TYPE.value,
-                KeysEnum.DESAPEAR_DATE.value
+                KeysEnum.DESAPEAR_DATE.value,
+                KeysEnum.ROOMS_TYPE.value
                 ]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
@@ -333,6 +339,7 @@ class DataWorker:
                             offer['Балкон'],
                             offer['Отделка'],
                             offer[KeysEnum.DESAPEAR_DATE.value],
+                            offer['Тип комнат']
                             ))
         return await self.update_or_past(keys, records, KeysEnum.LISTINGS_STATIC_FEATURES_ID.value, 'Listings_Static_Features')
 
@@ -386,16 +393,18 @@ class DataWorker:
     async def update_or_past_listings_rent(self, data):
         records = []
         keys = [KeysEnum.LISTINGS_RENT_ID.value,
+                KeysEnum.RENTAL_PERIOD.value,
                 KeysEnum.IS_COMMUNAL_PAYMENTS_INCLUDED.value,
                 KeysEnum.PLEDGE.value,
                 KeysEnum.COMMISSION.value,
                 KeysEnum.PREPAYMENT.value]
         for offer in data:
             records.append((offer[KeysEnum.LISTING_ID.value],
+                            offer['Срок аренды'],
                             offer['Коммуналньые платежи'],
+                            offer['Залог'],
                             offer['Комиссия'],
-                            offer['Предоплата'],
-                            offer['Залог']))
+                            offer['Предоплата']))
 
         history_keys = [KeysEnum.LISTINGS_RENT_ID.value,
                         KeysEnum.IS_COMMUNAL_PAYMENTS_INCLUDED.value,
@@ -444,10 +453,10 @@ class DataWorker:
                         set(self.listings_keys) | \
                         set(self.website_listings_map_keys) |\
                         set(self.listings_images_keys)
-        if data[KeysEnum.LISTING_TYPE_ID.value] == 2:
-            possible_keys |= set(self.lisitng_rent_keys)
-        else:
+        if data[KeysEnum.LISTING_TYPE_ID.value] == self.sale_id:
             possible_keys |= set(self.lisitng_sale_keys)
+        else:
+            possible_keys |= set(self.lisitng_rent_keys)
 
         for key in possible_keys:
             if key not in data.keys():
@@ -473,7 +482,7 @@ class DataWorker:
 
     async def save_to_db(self, data):
         offers_with_sellers = []
-        is_sale = True if data[0][KeysEnum.LISTING_TYPE_ID.value] == 1 else False
+        is_sale = True if data[0][KeysEnum.LISTING_TYPE_ID.value] == self.sale_id else False
         for offer in data:
             self.data_dict_flatten(offer)
             self.add_none_fields(offer)
