@@ -59,7 +59,7 @@ metadata:
   name: shallow-rent-parser
   namespace: default
 spec:
-  schedule: "0 18 * * *"
+  schedule: "0 20 * * *"
   startingDeadlineSeconds: 60
   jobTemplate:
     spec:

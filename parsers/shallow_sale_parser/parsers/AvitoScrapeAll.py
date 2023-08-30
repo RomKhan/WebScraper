@@ -147,10 +147,10 @@ class AvitoScrapeAll(ScrapeAll):
     def get_count_of_offers(self, content) -> int:
         tree = html.fromstring(content)
         try:
-            if self.parse_if_exists(content, "//div[starts-with(@class, 'no-results-root')]") is not None:
-                return 0
             offer_count_text = ''.join(unidecode.unidecode(tree.xpath("//span[starts-with(@class, 'page-title-count')]/text()")[0]).split())
         except:
+            if self.parse_if_exists(content, "//div[starts-with(@class, 'no-results-root')]") is not None:
+                return 0
             return -1
         return int(offer_count_text)
 
