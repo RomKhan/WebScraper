@@ -3,7 +3,7 @@ services:
   cian_shallow_sale:
     build:
       context: .
-      dockerfile: parsers/shallow_sale_parser/Dockerfile
+      dockerfile: parsers/parser/Dockerfile
     depends_on:
       - app
     environment:
@@ -21,7 +21,7 @@ services:
   domclick_shallow_sale:
     build:
       context: .
-      dockerfile: parsers/shallow_sale_parser/Dockerfile
+      dockerfile: parsers/parser/Dockerfile
     depends_on:
       - app
     environment:
@@ -39,7 +39,7 @@ services:
   avito_shallow_sale:
     build:
       context: .
-      dockerfile: parsers/shallow_sale_parser/Dockerfile
+      dockerfile: parsers/parser/Dockerfile
     depends_on:
       - app
     environment:

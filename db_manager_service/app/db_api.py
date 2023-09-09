@@ -47,13 +47,19 @@ async def get_listing_type_id(listing_type: str):
 @router.post('/saveImages', status_code=200)
 async def load_images(data: dict):
     image_loader = get_image_loader()
-    image_loader.load_images_to_disk(data)
-    global image_reuests_count
-    image_reuests_count += 1
-    if image_reuests_count == 100:
-        image_reuests_count = 0
-        thread = threading.Thread(image_loader.download_current_state)
-        thread.start()
+    platform_name, offer_id, images_url = data['website_name'], data['id'], data['urls']
+    for i in range(len(images_url)):
+        image_data = {'website_name': platform_name, 'id': offer_id, 'url': images_url, 'index': i}
+        image_loader.image_queue.append(image_data)
+    # image_loader.load_images_to_disk(data)
+    # thread = threading.Thread(image_loader.load_images_to_disk, args=(data))
+    # thread.start()
+    # global image_reuests_count
+    # image_reuests_count += 1
+    # if image_reuests_count == 100:
+    #     image_reuests_count = 0
+    #     thread = threading.Thread(image_loader.download_current_state)
+    #     thread.start()
     return 'Data saved successfully'
 
 # @router.get('/pullImages', status_code=200)

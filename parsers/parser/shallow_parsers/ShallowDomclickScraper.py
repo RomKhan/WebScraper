@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-class DomClickScrapeAll(ScrapeAll):
+class ShallowDomclickScraper(ScrapeAll):
     def __init__(self, url_components, city, website, listing_type, min_price):
         ScrapeAll.__init__(self,
                            url_components,

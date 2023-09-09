@@ -12,11 +12,12 @@ RUN apt-get update -qqy \
 
 #... (install dependencies)
 
-COPY ./shallow_sale_parser/start.py /app/
-COPY ./shallow_sale_parser/utils.py /app/
-COPY ./shallow_sale_parser/parsers /app/parsers/
+COPY ./parser/start.py /app/
+COPY ./parser/utils.py /app/
+COPY ./parser/shallow_parsers /app/shallow_parsers/
+COPY ./parser/deep_parsers /app/deep_parsers/
 
-COPY ./shallow_sale_parser/requirements.txt /app/
+COPY ./parser/requirements.txt /app/
 RUN pip install -r /app/requirements.txt
 
 COPY ./abstract /app/abstract/

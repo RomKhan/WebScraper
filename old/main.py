@@ -6,9 +6,9 @@ import yadisk
 import time
 
 # from old.CianScraper import CianScraper
-from parsers.shallow_sale_parser.parsers.YandexScrapeAll import YandexScrapeAll
-from parsers.shallow_sale_parser.utils import parse_all
-# from parsers.shallow_sale_parser.parsers.DomClickScrapeAll import DomClickScrapeAll
+from parsers.parser.shallow_parsers.ShallowYandexScraper import ShallowYandexScraper
+from parsers.parser.utils import shallow_parser
+# from shallow_parsers.parser.shallow_parsers.DomClickScrapeAll import DomClickScrapeAll
 import os
 import shutil
 
@@ -108,8 +108,8 @@ def main():
     #       f'было отправлено {scraper.count_of_requests} запросов за {t2-t1} секунд')
 
     url_yandex_moscow = 'https://realty.ya.ru/moskva/kupit/kvartira/?sort=PRICE&priceMin=1000000&page=1'
-    thread0 = threading.Thread(target=parse_all, args=(
-        YandexScrapeAll, url_yandex_moscow, 'Москва', 'yandex', 'Продажа'))
+    thread0 = threading.Thread(target=shallow_parser, args=(
+        ShallowYandexScraper, url_yandex_moscow, 'Москва', 'yandex', 'Продажа'))
     thread0.start()
     time.sleep(5)
 

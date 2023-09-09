@@ -26,6 +26,8 @@ def create_app():
 app = create_app()
 address_save_thread = threading.Thread(target=get_address_manager().address_finder)
 address_save_thread.start()
+images_save_thread = threading.Thread(target=get_image_loader().load_images_to_disk)
+images_save_thread.start()
 scheduler = BackgroundScheduler()
 scheduler.add_job(get_image_loader().download_current_state, trigger=IntervalTrigger(seconds=60))
 scheduler.start()

@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-class CianScrapeAll(ScrapeAll):
+class ShallowCianScraper(ScrapeAll):
     def __init__(self, url_components, city, website, listing_type, min_price):
         ScrapeAll.__init__(self,
                            url_components,
@@ -78,9 +78,7 @@ class CianScrapeAll(ScrapeAll):
                 rental_period = tags.pop(0)
                 for tag in tags:
                     tag = tag.strip()
-                    if tag.startswith('комм.'):
-                        is_communal_payments_included = True
-                    elif tag == 'без комиссии':
+                    if tag == 'без комиссии':
                         commission = 0
                     elif tag.startswith('комиссия'):
                         commission = int(tag.split()[1][:-1])
@@ -88,6 +86,8 @@ class CianScrapeAll(ScrapeAll):
                         pledge = 0
                     elif tag.startswith('залог'):
                         pledge = int(''.join(filter(str.isdigit, tag)))
+                    elif 'комм.' in tag:
+                        is_communal_payments_included = True
                     else:
                         logging.warning(f'НОВЫЙ ТАГ - {tag}')
 

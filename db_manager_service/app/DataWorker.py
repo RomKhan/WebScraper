@@ -132,10 +132,11 @@ class DataWorker:
             existed_rows = await self.query_with_returning(select_query, list(idx_all))
         idx_exists = set([row[0] for row in existed_rows])
 
+
         insert_query = f"""INSERT INTO {table_name} ({", ".join(keys)})
                               VALUES ({", ".join([f"${i+1}" for i in range(len(keys))])})
                               ON CONFLICT ({id_name}) DO
-                              UPDATE SET {", ".join([f"{key} = EXCLUDED.{key}" for key in keys])}"""
+                              UPDATE SET {", ".join([f"{key} = COALESCE(EXCLUDED.{key}, {table_name}.{key})" for key in keys])}"""
         await self.insert_many(insert_query, new_records)
 
         if history_keys is not None and len(existed_rows) > 0:
@@ -463,7 +464,6 @@ class DataWorker:
                 data[key] = None
 
     def type_convert(self, data):
-        data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data[KeysEnum.PRICE.value] = DataWorker.type_convert_if_possible(data, KeysEnum.PRICE.value, int)
         data['Число комнат'] = DataWorker.type_convert_if_possible(data, 'Число комнат', int)
         data['Общая площадь'] = DataWorker.type_convert_if_possible(data, 'Общая площадь', float)
@@ -479,6 +479,8 @@ class DataWorker:
         data['Раздельный санузел'] = DataWorker.type_convert_if_possible(data, 'Раздельный санузел', int)
         data['Лоджия'] = DataWorker.type_convert_if_possible(data, 'Лоджия', int)
         data['Балкон'] = DataWorker.type_convert_if_possible(data, 'Балкон', int)
+        data['Пассажирский лифт'] = DataWorker.type_convert_if_possible(data, 'Пассажирский лифт', int)
+        data['Грузовой лифт'] = DataWorker.type_convert_if_possible(data, 'Грузовой лифт', int)
 
     async def save_to_db(self, data):
         offers_with_sellers = []

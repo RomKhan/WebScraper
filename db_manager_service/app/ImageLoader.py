@@ -11,6 +11,7 @@ class ImageLoader:
         self.is_downloading_current_state = False
         self.disk_folder_name = 'temp'
         self.storage_folder = 'images'
+        self.image_queue = []
 
         if os.path.exists(f"{self.disk_folder_name}"):
             shutil.rmtree(f"{self.disk_folder_name}")
@@ -90,10 +91,14 @@ class ImageLoader:
             print(e, f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
 
 
-    def load_images_to_disk(self, data):
-        platform_name, offer_id, images_url = data['website_name'], data['id'], data['urls']
-        for i in range(len(images_url)):
+    def load_images_to_disk(self):
+        while True:
             if self.is_downloading_current_state:
                 time.sleep(5)
                 continue
-            self.disk.upload_url(images_url[i], f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg', n_retries=5, retry_interval=1)
+            if len(self.image_queue) > 0:
+                data = self.image_queue.pop(0)
+                platform_name, offer_id, images_url, i = data['website_name'], data['id'], data['url'], data['index']
+                self.disk.upload_url(images_url[i], f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg', n_retries=5, retry_interval=1)
+            else:
+                time.sleep(2)

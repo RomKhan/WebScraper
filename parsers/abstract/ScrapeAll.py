@@ -24,13 +24,12 @@ class ScrapeAll(ScraperAbstract):
                  offers_xpath,
                  max_page,
                  offers_per_page):
-        ScraperAbstract.__init__(self, website_name, city, listing_type)
+        ScraperAbstract.__init__(self, website_name, city, listing_type, max_page)
         self.url_components = url_components
         self.current_price = min_price
         self.prev_price = self.current_price
         self.last_offers_count = -1
         self.is_end = False
-        self.max_page = max_page
         self.offers_per_page = offers_per_page
 
         self.count_of_parsed = 0
@@ -38,9 +37,6 @@ class ScrapeAll(ScraperAbstract):
         self.offers_xpath = offers_xpath
         self.status = True
         self.url_queue = []
-
-    def reset_iter(self):
-        self.prev_price = 0
 
     def get_and_parse_page(self, url, attempts, page, pod, key):
         t1 = time.time()
@@ -78,9 +74,6 @@ class ScrapeAll(ScraperAbstract):
         logging.info(f'Количество активных потоков: {threading.active_count()}')
         while self.current_page <= self.max_page:
             pods = self.reserve_pods()
-            if len(pods) == 0:
-                time.sleep(2)
-                continue
             for pod in pods:
                 url = self.get_desk_link()
                 attempts = 0
@@ -132,9 +125,6 @@ class ScrapeAll(ScraperAbstract):
                 logging.info(f'DON\'T Saved {link}')
         count = len(idx)
         return count, last_price
-
-    def get_price_windows(self):
-        pass
 
     def get_count_of_offers(self, content) -> int:
         pass

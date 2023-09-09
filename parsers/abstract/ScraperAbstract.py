@@ -1,17 +1,15 @@
 import logging
+import time
 from enum import Enum
 import requests
 from KeysEnum import KeysEnum
 # from parsers.KeysEnum import KeysEnum
 
-class ListingMode(Enum):
-    rent = 0
-    sale = 1
-
 
 class ScraperAbstract:
-    def __init__(self, website_name, city, listing_type):
+    def __init__(self, website_name, city, listing_type, max_page):
         self.current_page = 1
+        self.max_page = max_page
         self.db_flow_url = 'http://db-api-service:8080/db'
         self.chrome_service = 'http://api-getaway-service:8083'
         # self.db_flow_url = 'http://192.168.100.53:30058/db'
@@ -26,14 +24,20 @@ class ScraperAbstract:
 
     def reserve_pods(self):
         pods = []
-        try:
-            response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
-            if response.status_code == 200:
-                data = response.json()
-                for i in range(len(data['pods'])):
-                    pods.append((data['pods'][i], data['keys'][i]))
-        except:
-            pass
+        while True:
+            try:
+                response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
+                if response.status_code == 200:
+                    data = response.json()
+                    for i in range(len(data['pods'])):
+                        pods.append((data['pods'][i], data['keys'][i]))
+            except:
+                pass
+
+            if len(pods) == 0:
+                time.sleep(2)
+            else:
+                break
         return pods
 
 
@@ -72,6 +76,17 @@ class ScraperAbstract:
         except:
             inserted_rows = -1
         return inserted_rows
+
+    def save_images(self, id, urls):
+        try:
+            requests.post(self.db_flow_url+'/saveImages',
+                          json={
+                              'website_name': self.website_name,
+                              'id': id,
+                              'urls': urls
+                          })
+        except:
+            logging.info('Произошла ошибка при сохранении картинок')
 
     def parse_offer(self, offer):
         pass

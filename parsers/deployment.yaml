@@ -1,46 +1,64 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shallow-sale-parser
+  name: parser
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: shallow-sale-parser-cian-moskow
+      app: parser
   template:
     metadata:
       labels:
-        app: shallow-sale-parser-cian-moskow
+        app: parser
     spec:
+#      containers:
+#        - name: shallow-sale-parser-cian-moskow
+#          image: stikeyrs/scraper:parser
+#          env:
+#            - name: WEBSITE_NAME
+#              value: cian
+#            - name: TYPE
+#              value: rent
+#            - name: MODE
+#              value: shallow
+#        - name: shallow-sale-parser-domclick-moskow
+#          image: stikeyrs/scraper:parser
+#          env:
+#            - name: WEBSITE_NAME
+#              value: domclick
+#            - name: TYPE
+#              value: rent
+#            - name: MODE
+#              value: shallow
+#        - name: shallow-sale-parser-avito-moskow
+#          image: stikeyrs/scraper:parser
+#          env:
+#            - name: WEBSITE_NAME
+#              value: avito
+#            - name: TYPE
+#              value: rent
+#            - name: MODE
+#              value: shallow
+#        - name: shallow-sale-parser-yandex-moskow
+#          image: stikeyrs/scraper:parser
+#          env:
+#            - name: WEBSITE_NAME
+#              value: yandex
+#            - name: TYPE
+#              value: rent
+#            - name: MODE
+#              value: shallow
       containers:
-        - name: shallow-sale-parser-cian-moskow
-          image: stikeyrs/scraper:shallow_sale_parser
+        - name: deep-sale-parser-cian
+          image: stikeyrs/scraper:parser
           env:
             - name: WEBSITE_NAME
               value: cian
             - name: TYPE
-              value: rent
-        - name: shallow-sale-parser-domclick-moskow
-          image: stikeyrs/scraper:shallow_sale_parser
-          env:
-            - name: WEBSITE_NAME
-              value: domclick
-            - name: TYPE
-              value: rent
-        - name: shallow-sale-parser-avito-moskow
-          image: stikeyrs/scraper:shallow_sale_parser
-          env:
-            - name: WEBSITE_NAME
-              value: avito
-            - name: TYPE
-              value: rent
-        - name: shallow-sale-parser-yandex-moskow
-          image: stikeyrs/scraper:shallow_sale_parser
-          env:
-            - name: WEBSITE_NAME
-              value: yandex
-            - name: TYPE
-              value: rent
+              value: sale
+            - name: MODE
+              value: deep
 #      restartPolicy: OnFailure  # Политика перезапуска контейнера
       imagePullSecrets:
         - name: docker-registry-secret

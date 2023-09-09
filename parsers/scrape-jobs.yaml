@@ -21,28 +21,28 @@ spec:
                   value: sale
           containers:
           - name: shallow-sale-parser-cian
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: cian
               - name: TYPE
                 value: sale
           - name: shallow-sale-parser-domclick
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: domclick
               - name: TYPE
                 value: sale
           - name: shallow-sale-parser-avito
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: avito
               - name: TYPE
                 value: sale
           - name: shallow-sale-parser-yandex
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: yandex
@@ -76,28 +76,28 @@ spec:
                   value: rent
           containers:
           - name: shallow-rent-parser-cian
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: cian
               - name: TYPE
                 value: rent
           - name: shallow-rent-parser-domclick
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: domclick
               - name: TYPE
                 value: rent
           - name: shallow-rent-parser-avito
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: avito
               - name: TYPE
                 value: rent
           - name: shallow-rent-parser-yandex
-            image: stikeyrs/scraper:shallow_sale_parser
+            image: stikeyrs/scraper:parser
             env:
               - name: WEBSITE_NAME
                 value: yandex
