@@ -23,7 +23,7 @@ class Scraper(ScraperAbstract):
         self.parsed_count = 0
 
     def run(self):
-        self.current_page = 1
+        self.current_page = 3
         current_idx = set()
         errors = 0
         while self.current_page <= self.max_page and len(self.previous_idx & current_idx) == 0:

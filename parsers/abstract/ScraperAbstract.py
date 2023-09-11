@@ -64,6 +64,8 @@ class ScraperAbstract:
         return None
 
     def to_database(self, offers):
+        if len(offers) == 0:
+            return 0
         for offer in offers:
             offer[KeysEnum.LISTING_ID.value] = f'{offer[KeysEnum.LISTING_ID.value]}_{self.website_db_id}_{self.listing_type_db_id}_{self.city_db_id}'
             offer[KeysEnum.WEBSITE_ID.value] = self.website_db_id
