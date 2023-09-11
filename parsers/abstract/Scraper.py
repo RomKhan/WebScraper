@@ -23,11 +23,12 @@ class Scraper(ScraperAbstract):
         self.parsed_count = 0
 
     def run(self):
-        self.current_page = 3
+        start_page_number = 1
+        self.current_page = start_page_number
         current_idx = set()
         errors = 0
         while self.current_page <= self.max_page and len(self.previous_idx & current_idx) == 0:
-            if self.is_first_run and self.current_page > 1:
+            if self.is_first_run and self.current_page > start_page_number:
                 self.is_first_run = False
                 break
             pod, key = self.reserve_pods()[0]
@@ -41,7 +42,7 @@ class Scraper(ScraperAbstract):
                     errors += 1
                     continue
                 errors = 0
-                if self.current_page == 1:
+                if self.current_page == start_page_number:
                     current_idx = idx
                 idx = idx - self.previous_idx
                 for id in idx:
