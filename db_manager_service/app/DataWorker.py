@@ -473,7 +473,7 @@ class DataWorker:
         data['Этажей в доме'] = DataWorker.type_convert_if_possible(data, 'Этажей в доме', int)
         data['Год постройки'] = DataWorker.type_convert_if_possible(data, 'Год постройки', int)
         data['Подъезды'] = DataWorker.type_convert_if_possible(data, 'Подъезды', int)
-        data['Высота потолков'] = DataWorker.type_convert_if_possible(data, 'Высота потолков', int)
+        data['Высота потолков'] = DataWorker.type_convert_if_possible(data, 'Высота потолков', float)
         data['Год сдачи'] = DataWorker.type_convert_if_possible(data, 'Год сдачи', int)
         data['Совмещенный санузел'] = DataWorker.type_convert_if_possible(data, 'Совмещенный санузел', int)
         data['Раздельный санузел'] = DataWorker.type_convert_if_possible(data, 'Раздельный санузел', int)
