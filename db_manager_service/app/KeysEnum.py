@@ -64,3 +64,8 @@ class KeysEnum(Enum):
     PREPAYMENT = 'prepayment'
     ROOMS_TYPE = 'rooms_type'
     RENTAL_PERIOD = 'rental_period'
+    FURNITURE = 'furniture'
+    TECHNIQUE = 'technique'
+    HEATED_FLOORS = 'heated_floors'
+    CONCIERGE = 'concierge'
+    YARD_DATA = 'уard_data'

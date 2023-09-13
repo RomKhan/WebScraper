@@ -4,26 +4,32 @@ import numpy as np
 # Загрузите изображение
 image = cv2.imread('test.jpeg')
 
-# Перевести изображение в формат HSV (Оттенок, Насыщенность, Яркость)
+# Перевести изображение в формат HSV
 hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-# Определите нижний и верхний диапазоны цветов для фона (в данном случае, белого цвета)
-lower_white = np.array([0, 0, 200])
-upper_white = np.array([255, 30, 255])
+# Извлечь насыщенность (Saturation) из HSV изображения
+saturation = np.mean(hsv_image, axis=0)
 
-# Создайте маску на основе диапазонов цветов
-mask = cv2.inRange(hsv_image, lower_white, upper_white)
+# Найдите точку, в которой насыщенность резко возрастает (например, первый пик)
+threshold = 50  # Задайте порог насыщенности
+separate_line = None
+max_distance_saturation = 0
+max_distance_brightness = 0
 
-# Найдите контуры в маске
-contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+for row in [x for x in range(1, saturation.shape[0]) if x < saturation.shape[0] // 2 - 50 or x > saturation.shape[0] // 2 + 50]:
+    if saturation[row, 1] > saturation[row-1, 1] and saturation[row, 1] - saturation[row-1, 1] >= 1.3 * max_distance_saturation\
+            and saturation[row, 2] < saturation[row-1, 2] and saturation[row-1, 2] - saturation[row, 2] >= 1.3 * max_distance_brightness:
+        separate_line = row
+        max_distance_saturation = saturation[row, 1] - saturation[row-1, 1]
+        max_distance_brightness = saturation[row - 1, 2] - saturation[row, 2]
 
-# Используйте наибольший контур как область внутренней фотографии
-if contours:
-    largest_contour = max(contours, key=cv2.contourArea)
-    x, y, w, h = cv2.boundingRect(largest_contour)
+if separate_line > saturation.shape[0] // 2:
+    separate_line = saturation.shape[0] - separate_line
+# Обрежьте изображение с учетом начальной строки, где насыщенность резко возрастает
+if separate_line is not None:
+    cropped_image = image[:, separate_line:-separate_line - 1]
 
-    # Вырежьте внутреннюю фотографию
-    inner_image = image[y:y+h, x:x+w]
-
-    # Сохраните извлеченное изображение
-    cv2.imwrite('внутренняя_фотография.jpg', inner_image)
+    # Сохраните обрезанное изображение
+    cv2.imwrite('обрезанное_изображение.jpg', cropped_image)
+else:
+    print("На изображении нет резкого возрастания насыщенности.")

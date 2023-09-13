@@ -10,6 +10,7 @@ from shallow_parsers.ShallowCianScraper import ShallowCianScraper
 from shallow_parsers.ShallowDomclickScraper import ShallowDomclickScraper
 from shallow_parsers.ShallowYandexScraper import ShallowYandexScraper
 from deep_parsers.DeepCianScraper import DeepCianScraper
+from deep_parsers.DeepAvitoScraper import DeepAvitoScraper
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
     website_name = os.environ.get('WEBSITE_NAME')
     type = os.environ.get('TYPE')
     mode = os.environ.get('MODE')
-    # website_name='cian'
+    # website_name='avito'
     # type='sale'
     # mode = 'deep'
 
@@ -51,7 +52,7 @@ def main():
         elif website_name == 'domclick':
             deep_parser(ShallowDomclickScraper, website_name, type)
         elif website_name == 'avito':
-            deep_parser(ShallowAvitoScraper, website_name, type)
+            deep_parser(DeepAvitoScraper, website_name, type)
         elif website_name == 'yandex':
             deep_parser(ShallowYandexScraper, website_name, type)
 

@@ -88,7 +88,6 @@ class ShallowDomclickScraper(ScrapeAll):
         return offer_data, id
 
 
-
     def parse_title(self, title):
         title = title.xpath('.//span/text()')
         if title[0][0].isdigit():

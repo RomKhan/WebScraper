@@ -3,6 +3,7 @@ import shutil
 import time
 import cv2
 from zipfile import ZipFile
+import numpy as np
 
 
 class ImageLoader:
@@ -84,11 +85,35 @@ class ImageLoader:
 
         try:
             img = cv2.imread(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+            if platform_name == 'avito':
+                img = self.cut_image(img)
             resize_img = cv2.resize(img, (256, 256))
             cv2.imwrite(f'{self.storage_folder}/{platform_name}/{offer_id}/image_{i}.jpg', resize_img)
             os.remove(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
         except Exception as e:
             print(e, f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+
+    def cut_image(self, image):
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        saturation = np.mean(hsv_image, axis=0)
+        separate_line = 1
+        max_distance_saturation = 0
+        max_distance_brightness = 0
+
+        for row in [x for x in range(1, saturation.shape[0]) if
+                    x < saturation.shape[0] // 2 - 50 or x > saturation.shape[0] // 2 + 50]:
+            if saturation[row, 1] > saturation[row - 1, 1] and saturation[row, 1] - saturation[
+                row - 1, 1] >= 1.3 * max_distance_saturation \
+                    and saturation[row, 2] < saturation[row - 1, 2] and saturation[row - 1, 2] - saturation[
+                row, 2] >= 1.3 * max_distance_brightness:
+                separate_line = row
+                max_distance_saturation = saturation[row, 1] - saturation[row - 1, 1]
+                max_distance_brightness = saturation[row - 1, 2] - saturation[row, 2]
+
+        if separate_line > saturation.shape[0] // 2:
+            separate_line = saturation.shape[0] - separate_line
+
+        return image[:, separate_line:-separate_line - 1]
 
 
     def load_images_to_disk(self):

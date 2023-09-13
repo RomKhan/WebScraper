@@ -17,21 +17,24 @@ class DeepAvitoScraper(Scraper):
                          website_name,
                          city,
                          listing_type,
-                         max_page=100)
+                         max_page=100,
+                         prev_address='https://www.avito.ru')
 
     def parse_offer_page(self, content, link, id):
         try:
-            tree = html.fromstring(content)
-            id = list(filter(None, re.split('_|/', link)))[-1]
+            content = html.fromstring(content)
             address = f'{self.city}, ' + content.xpath('.//div[@itemprop="address"]/span/text()')[0]
-            rooms_count, house_type, total_square, flat_flour, max_flours = self.parse_title(content)
+            rooms_count, property_type, total_square, flat_flour, max_flours = self.parse_title(content)
             price = content.xpath('.//span[@itemprop="price"]')[0].get('content')
-            description_block = content.xpath('.//div[@itemprop="description"]/p/text')
-            if len(description_block) > 0:
-                description = description_block[0].replace('\'', '"')
-            else:
-                description = None
-        except:
+            description_block = content.xpath('.//div[@itemprop="description"]//p/text()')
+            if len(description_block) == 0:
+                description_block = content.xpath('.//div[@itemprop="description"]/text()')
+            description = '\n'.join(description_block).replace('\'', '"')
+            images = content.xpath('.//meta[@property="og:image"]')
+            for i in range(len(images)):
+                images[i] = images[i].get('content')
+        except Exception as e:
+            logging.info(f'Критическая ошибка: {e}, Обьявление: {link}')
             return False
 
         kitchen_area = None
@@ -46,11 +49,24 @@ class DeepAvitoScraper(Scraper):
         is_mortgage_available = None
         balcony_count = None
         loggia_count = None
+        furniture = None
+        technique = None
+        heated_floors = None
+        decoration_finishing_type = None
+        house_type = None
+        passenger_elevator_count = None
+        freight_elevator_count = None
+        parking_type = None
+        end_build_year = None
+        is_chute = None
+        gas_supply_type = None
+        concierge = None
+        residential_complex_name = None
+        уard = None
         try:
             apartment_params_list = content.xpath(".//ul[starts-with(@class, 'params-paramsList')]/li")
             for param in apartment_params_list:
-                name = param.xpath('.//span/text()')[0].replace('\xa0', ' ')
-                value = param.text.replace('\xa0', ' ')
+                name, value = param.text_content().replace('\xa0', ' ').split(': ')
                 if name == 'Площадь кухни':
                     kitchen_area = value.split()[0]
                 elif name == 'Жилая площадь':
@@ -62,13 +78,13 @@ class DeepAvitoScraper(Scraper):
                 elif name == 'Окна':
                     window_view = value
                 elif name == 'Санузел':
-                    types = name.split()
+                    types = value.split()
                     if len(types) == 2:
                         separate_bathroom_count = '1'
                         combined_bathroom_count = '1'
                     elif value == 'раздельный':
                         separate_bathroom_count = '1'
-                    elif value == 'совмещённый':
+                    elif value == 'совмещенный':
                         combined_bathroom_count = '1'
                 elif name == 'Ремонт':
                     renovation = value
@@ -77,7 +93,7 @@ class DeepAvitoScraper(Scraper):
                 elif name == 'Вид сделки' and value == 'возможна ипотека':
                     is_mortgage_available = True
                 elif name == 'Балкон или лоджия':
-                    types = name.split()
+                    types = value.split()
                     if len(types) == 2:
                         balcony_count = '1'
                         loggia_count = '1'
@@ -86,65 +102,100 @@ class DeepAvitoScraper(Scraper):
                     elif value == 'лоджия':
                         loggia_count = '1'
                 elif name == 'Мебель':
-                    living_area = value
+                    furniture = value
                 elif name == 'Техника':
-                    living_area = value
-            price, conditions, is_mortgage_available = self.parse_aside_main_info(tree)
-            rooms_count, house_type, total_square, address, residential_complex = self.parse_main_title(tree)
-            object_data_dict = self.parse_object_factors(tree)
-            description = self.parse_description(tree)
-            add_dict_info = self.parse_flat_and_house_additional_data(tree)
-            image_urls = self.parse_photos_urls(tree)
-            if image_urls == False:
-                image_path = False
-            else:
-                image_path = f'{self.website_name}{os.sep}{id}'
-                self.save_images(id, image_urls)
-            offer_data = {KeysEnum.LISTING_ID.value: id,
-                          KeysEnum.PRICE.value: price,
-                          'Условия cделки': conditions,
-                          'Ипотека': is_mortgage_available,
-                          'Число комнат': rooms_count,
-                          'Тип жилья': house_type,
-                          'Общая площадь': total_square,
-                          'Адресс': address,
-                          'Название ЖК': residential_complex,
-                          'Описание': description,
-                          'Ссылка': link,
-                          'Путь к картинкам': image_path
-                          }
-            offer_data.update(object_data_dict)
-            offer_data.update(add_dict_info)
-            #offer_data.update(house_info_dict)
-            self.offers.append(offer_data)
+                    technique = value
+                elif name == 'Тёплый пол':
+                    heated_floors = value
+                elif name == 'Отделка':
+                    decoration_finishing_type = value
+                elif name != 'Количество комнат' and name != 'Общая площадь' and name != 'Этаж' and name != 'Дополнительно':
+                    logging.warning(f'НОВЫЙ ТАГ КВАРТИРЫ - {name}:{value}, ссылка: {link}')
+
+            house_params_list = content.xpath(".//ul[starts-with(@class, 'style-item-params-list')]/li")
+            for param in house_params_list:
+                name, value = param.text_content().replace('\xa0', ' ').split(': ')
+                if name == 'Тип дома':
+                    house_type = value
+                elif name == 'Пассажирский лифт':
+                    if value.isdigit():
+                        passenger_elevator_count = value
+                    else:
+                        passenger_elevator_count = 0
+                elif name == 'Грузовой лифт':
+                    if value.isdigit():
+                        freight_elevator_count = value
+                    else:
+                        freight_elevator_count = 0
+                elif name == 'Парковка':
+                    parking_type = value
+                elif name == 'Год постройки':
+                    end_build_year = value
+                elif name == 'В доме':
+                    inside = value.split(', ')
+                    for obj in inside:
+                        if obj == 'мусоропровод':
+                            is_chute = 'есть'
+                        elif obj == 'газ':
+                            gas_supply_type = 'есть'
+                        elif obj == 'консьерж':
+                            concierge = True
+                        else:
+                            logging.warning(f'НОВЫЙ ТАГ ВНУТРИ ДОМА - {obj}, ссылка: {link}')
+                elif name == 'Название новостройки':
+                    residential_complex_name = param.xpath('.//a/text()')[0].replace('\xa0', ' ')
+                elif name == 'Срок сдачи':
+                    end_build_year = value.split()[-1]
+                elif name == 'Двор':
+                    уard = value
+                elif name != 'Этажей в доме' and name != 'Корпус, строение' and name != 'Тип участия':
+                    logging.warning(f'НОВЫЙ ТАГ ДОМА - {name}:{value}, ссылка: {link}')
         except Exception as e:
             logging.info(f'Ошибка: {e}, Обьявление: {link}')
 
         offer_data = {KeysEnum.LISTING_ID.value: id,
                       KeysEnum.PRICE.value: price,
                       'Число комнат': rooms_count,
-                      'Тип жилья': house_type,
+                      'Тип жилья': property_type,
                       'Общая площадь': total_square,
+                      'Жилая площадь': living_area,
+                      'Площадь кухни': kitchen_area,
                       'Адресс': address,
                       'Описание': description,
                       'Ссылка': link,
-                      'Название продаца': name,
                       'Этаж квартиры': flat_flour,
+                      'Высота потолков': ceiling_height,
+                      'Вид из окон': window_view,
+                      'Ремонт': renovation,
                       'Этажей в доме': max_flours,
-                      'Название ЖК': residential_complex,
-                      'Комиссия': commission,
-                      'Залог': pledge,
+                      'Название ЖК': residential_complex_name,
                       'Тип комнат': rooms_type,
                       'Балкон': balcony_count,
                       'Лоджия': loggia_count,
                       'Совмещенный санузел': combined_bathroom_count,
                       'Раздельный санузел': separate_bathroom_count,
+                      'Мебель': furniture,
+                      'Техника': technique,
+                      'Теплый пол': heated_floors,
+                      'Консьерж': concierge,
+                      'Двор': уard,
+                      'Условия сделки': conditions,
+                      'Ипотека': is_mortgage_available,
+                      'Пассажирский лифт': passenger_elevator_count,
+                      'Грузовой лифт': freight_elevator_count,
+                      'Парковка': parking_type,
+                      'Газоснабжение': gas_supply_type,
+                      'Мусоропровод': is_chute,
+                      'Год постройки': end_build_year,
+                      'Тип дома': house_type,
+                      'Отделка': decoration_finishing_type
                       }
         self.offers.append(offer_data)
+        self.save_images(id, images)
         return True
 
     def parse_title(self, offer):
-        title = offer.xpath('.//span[@itemprop="name"]/text()')[0].split(',')
+        title = offer.xpath('.//span[@class="title-info-title-text"]/text()')[0].split(',')
         if len(title) == 4:
             temp = title.pop(1)
             title[1] = ','.join([temp, title[1]])

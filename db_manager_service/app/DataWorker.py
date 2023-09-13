@@ -23,8 +23,10 @@ class DataWorker:
             'Тип дома',
             'Газоснабжение',
             'Мусоропровод',
+            'Консьерж',
             'Год постройки',
             'Год сдачи',
+            'Двор',
             'Тип перекрытий',
             'Дом',
             'Название ЖК',
@@ -48,6 +50,9 @@ class DataWorker:
             'Лоджия',
             'Балкон',
             'Отделка',
+            'Мебель',
+            'Техника',
+            'Теплый пол',
             KeysEnum.APPEARING_DATE.value,
             KeysEnum.DESAPEAR_DATE.value,
             'Тип комнат'
@@ -171,7 +176,6 @@ class DataWorker:
         existed_records = {(record[1], record[2]): record[0] for record in existed_records}
         keys = [KeysEnum.FULL_ADDRESS.value, KeysEnum.CITY_ID.value, KeysEnum.LATITUDE.value, KeysEnum.LONGITUTE.value]
         records = []
-        # new_idx = []
         equals = {}
         for i in range(len(data)):
             if (data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value]) in equals:
@@ -184,7 +188,6 @@ class DataWorker:
                     data[i][KeysEnum.LATITUDE.value],
                     data[i][KeysEnum.LONGITUTE.value]
                 ))
-                # new_idx.append(i)
                 equals[(data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value])] = [i]
             else:
                 data[i][KeysEnum.ADDRESS_ID.value] = existed_records[(data[i][KeysEnum.LATITUDE.value], data[i][KeysEnum.LONGITUTE.value])]
@@ -272,7 +275,9 @@ class DataWorker:
                 KeysEnum.HOUSE_TYPE.value,
                 KeysEnum.GAS_SUPPLY_TYPE.value,
                 KeysEnum.IS_CHUTE.value,
+                KeysEnum.CONCIERGE.value,
                 KeysEnum.END_BUILD_YEAR.value,
+                KeysEnum.YARD_DATA.value,
                 KeysEnum.FLOORING_TYPE.value,
                 KeysEnum.HOUSE_STATUS.value,
                 KeysEnum.RESIDENTIAL_COMPLEX_NAME.value
@@ -289,10 +294,12 @@ class DataWorker:
                             offer['Тип дома'],
                             offer['Газоснабжение'],
                             offer['Мусоропровод'],
+                            offer['Консьерж'],
                             offer['Год постройки'] if offer['Год постройки'] is not None else offer['Год сдачи'],
+                            offer['Двор'],
                             offer['Тип перекрытий'],
                             offer['Дом'],
-                            offer['Название ЖК'],
+                            offer['Название ЖК']
                             ))
         history_keys = [KeysEnum.ADDRESS_ID.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
         await self.update_or_past(keys, records, KeysEnum.ADDRESS_ID.value, 'House', history_keys)
@@ -317,6 +324,9 @@ class DataWorker:
                 KeysEnum.LOGGIA_COUNT.value,
                 KeysEnum.BALCONY_COUNT.value,
                 KeysEnum.DECORATION_FINISHING_TYPE.value,
+                KeysEnum.FURNITURE.value,
+                KeysEnum.TECHNIQUE.value,
+                KeysEnum.HEATED_FLOORS.value,
                 KeysEnum.DESAPEAR_DATE.value,
                 KeysEnum.ROOMS_TYPE.value
                 ]
@@ -339,6 +349,9 @@ class DataWorker:
                             offer['Лоджия'],
                             offer['Балкон'],
                             offer['Отделка'],
+                            offer['Мебель'],
+                            offer['Техника'],
+                            offer['Теплый пол'],
                             offer[KeysEnum.DESAPEAR_DATE.value],
                             offer['Тип комнат']
                             ))

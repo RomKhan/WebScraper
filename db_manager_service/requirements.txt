@@ -7,3 +7,4 @@ fastapi==0.100.0
 uvicorn
 asyncpg==0.28.0
 dadata==21.10.1
+numpy==1.23.4
