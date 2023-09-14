@@ -40,7 +40,10 @@ class ImageLoader:
 
 
     def download_current_state(self):
-        self.is_downloading_current_state = True
+        if not self.is_downloading_current_state:
+            self.is_downloading_current_state = True
+        else:
+            return
         time.sleep(1)
         if self.disk.exists(f'{self.disk_folder_name}_0'):
             self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')

@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime, timedelta
 import json
 import logging
@@ -10,8 +11,8 @@ configmap_name = "scraper-config"
 
 
 def get_configmap():
-    # config.load_kube_config()
-    config.load_incluster_config()
+    config.load_kube_config()
+    # config.load_incluster_config()
     v1 = client.CoreV1Api()
     configmap = v1.read_namespaced_config_map(name=configmap_name, namespace=namespace)
     return configmap, v1
@@ -128,6 +129,8 @@ def deep_parser(scraper_type, website, type):
         url_components = scraper_type.parse_link(website_urls[i])
         scraper = scraper_type(url_components, link_token, website, cities[i], type)
         scrapers.append(scraper)
+    thread = threading.Thread(target=scraper_type.get_offers_data)
+    thread.start()
 
     while True:
         for i in sort_mask:

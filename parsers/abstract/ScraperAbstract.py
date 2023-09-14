@@ -2,18 +2,18 @@ import logging
 import time
 from enum import Enum
 import requests
-from KeysEnum import KeysEnum
-# from parsers.KeysEnum import KeysEnum
+# from KeysEnum import KeysEnum
+from parsers.KeysEnum import KeysEnum
 
 
 class ScraperAbstract:
     def __init__(self, website_name, city, listing_type, max_page):
         self.current_page = 1
         self.max_page = max_page
-        self.db_flow_url = 'http://db-api-service:8080/db'
-        self.chrome_service = 'http://api-getaway-service:8083'
-        # self.db_flow_url = 'http://192.168.100.53:30058/db'
-        # self.chrome_service = 'http://192.168.100.53:32389'
+        # self.db_flow_url = 'http://db-api-service:8080/db'
+        # self.chrome_service = 'http://api-getaway-service:8083'
+        self.db_flow_url = 'http://192.168.100.53:30058/db'
+        self.chrome_service = 'http://192.168.100.53:32389'
         self.website_name = website_name
         self.listing_type = listing_type
         self.city = city
@@ -22,11 +22,11 @@ class ScraperAbstract:
         self.listing_type_db_id = int(requests.get(self.db_flow_url+'/getListingTypeId', params={'listing_type': listing_type}).text.strip('"'))
         self.count_of_requests = 0
 
-    def reserve_pods(self):
+    def reserve_pods(self, count):
         pods = []
         while True:
             try:
-                response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name})
+                response = requests.get(f"{self.chrome_service}/reservePod", json={'website': self.website_name, 'count': count})
                 if response.status_code == 200:
                     data = response.json()
                     for i in range(len(data['pods'])):

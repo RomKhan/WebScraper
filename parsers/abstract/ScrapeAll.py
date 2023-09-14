@@ -73,7 +73,7 @@ class ScrapeAll(ScraperAbstract):
         self.prev_price = self.current_price
         logging.info(f'Количество активных потоков: {threading.active_count()}')
         while self.current_page <= self.max_page:
-            pods = self.reserve_pods()
+            pods = self.reserve_pods('max')
             for pod in pods:
                 url = self.get_desk_link()
                 attempts = 0
@@ -88,6 +88,9 @@ class ScrapeAll(ScraperAbstract):
                         self.current_page += 1
                 else:
                     self.current_page += 1
+
+                if self.current_page > self.max_page:
+                    break
 
                 thread = threading.Thread(target=self.get_and_parse_page, args=(url, attempts, page, pod[0], pod[1]))
                 thread.start()

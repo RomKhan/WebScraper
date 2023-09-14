@@ -51,6 +51,9 @@ async def ping():
 @app.get('/reservePod', status_code=200)
 async def reserve_pod(request_json: dict):
     website = request_json['website']
+    count = request_json['count']
+    if count == 'max':
+        count = 10000000
     if website not in website_cooldowns:
         website_cooldowns[website] = get_cooldown(website)
     cooldown = website_cooldowns[website]
@@ -70,6 +73,8 @@ async def reserve_pod(request_json: dict):
             if response_code == 200:
                 pod_ips.append(pod_ip)
                 pods_keys.append(response_json['key'])
+                if count == len(pod_ips):
+                    break
     return {"pods": pod_ips, "keys": pods_keys, "count": len(pod_ips)}
 
 

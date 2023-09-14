@@ -3,10 +3,10 @@ import os
 import re
 
 from lxml import html
-# from parsers.KeysEnum import KeysEnum
-# from parsers.abstract.Scraper import Scraper
-from KeysEnum import KeysEnum
-from abstract.Scraper import Scraper
+from parsers.KeysEnum import KeysEnum
+from parsers.abstract.Scraper import Scraper
+# from KeysEnum import KeysEnum
+# from abstract.Scraper import Scraper
 
 
 class DeepAvitoScraper(Scraper):
@@ -17,6 +17,7 @@ class DeepAvitoScraper(Scraper):
                          website_name,
                          city,
                          listing_type,
+                         offers_xpath="//div[@data-marker='item' and parent::div[(contains(@class, 'items-items'))]]",
                          max_page=100,
                          prev_address='https://www.avito.ru')
 
@@ -63,6 +64,7 @@ class DeepAvitoScraper(Scraper):
         concierge = None
         residential_complex_name = None
         уard = None
+        is_derelicted = None
         try:
             apartment_params_list = content.xpath(".//ul[starts-with(@class, 'params-paramsList')]/li")
             for param in apartment_params_list:
@@ -148,6 +150,8 @@ class DeepAvitoScraper(Scraper):
                     end_build_year = value.split()[-1]
                 elif name == 'Двор':
                     уard = value
+                elif name == 'Запланирован снос':
+                    is_derelicted = name + ': ' + value
                 elif name != 'Этажей в доме' and name != 'Корпус, строение' and name != 'Тип участия':
                     logging.warning(f'НОВЫЙ ТАГ ДОМА - {name}:{value}, ссылка: {link}')
         except Exception as e:
@@ -188,7 +192,8 @@ class DeepAvitoScraper(Scraper):
                       'Мусоропровод': is_chute,
                       'Год постройки': end_build_year,
                       'Тип дома': house_type,
-                      'Отделка': decoration_finishing_type
+                      'Отделка': decoration_finishing_type,
+                      'Аварийность': is_derelicted
                       }
         self.offers.append(offer_data)
         self.save_images(id, images)
@@ -211,6 +216,11 @@ class DeepAvitoScraper(Scraper):
         total_square = title[1].split()[0]
         flat_flour, max_flours = title[2].split()[0].split('/')
         return rooms_count, house_type, total_square, flat_flour, max_flours
+
+    def get_link(self, offer):
+        link = offer.xpath('.//a[@itemprop="url"]')[0].get('href')
+        id = list(filter(None, re.split('_|/', link)))[-1]
+        return link, id
 
     def get_desk_link(self):
         if self.current_page < 2:

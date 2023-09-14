@@ -1,13 +1,14 @@
 import asyncio
 import logging
 import os
+import re
 import time
 
 from lxml import html
-# from parsers.KeysEnum import KeysEnum
-# from parsers.abstract.Scraper import Scraper
-from KeysEnum import KeysEnum
-from abstract.Scraper import Scraper
+from parsers.KeysEnum import KeysEnum
+from parsers.abstract.Scraper import Scraper
+# from KeysEnum import KeysEnum
+# from abstract.Scraper import Scraper
 
 
 class DeepCianScraper(Scraper):
@@ -18,6 +19,7 @@ class DeepCianScraper(Scraper):
                          website_name,
                          city,
                          listing_type,
+                         offers_xpath='//article[@data-name="CardComponent"]',
                          max_page=54)
 
     def parse_offer_page(self, content, link, id):
@@ -176,6 +178,11 @@ class DeepCianScraper(Scraper):
             images_urls.append(image.get('src'))
 
         return images_urls
+
+    def get_link(self, offer):
+        link = offer.xpath('.//div[@data-name="LinkArea"]/a')[0].get('href')
+        id = list(filter(None, re.split('_|/', link)))[-1]
+        return link, id
 
     def get_desk_link(self):
         if self.current_page < 2:
