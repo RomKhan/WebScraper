@@ -5,17 +5,17 @@ import time
 import requests
 
 from utils import *
-# from shallow_parsers.ShallowAvitoScraper import ShallowAvitoScraper
-# from shallow_parsers.ShallowCianScraper import ShallowCianScraper
-# from shallow_parsers.ShallowDomclickScraper import ShallowDomclickScraper
-# from shallow_parsers.ShallowYandexScraper import ShallowYandexScraper
+from shallow_parsers.ShallowAvitoScraper import ShallowAvitoScraper
+from shallow_parsers.ShallowCianScraper import ShallowCianScraper
+from shallow_parsers.ShallowDomclickScraper import ShallowDomclickScraper
+from shallow_parsers.ShallowYandexScraper import ShallowYandexScraper
 from deep_parsers.DeepCianScraper import DeepCianScraper
 from deep_parsers.DeepAvitoScraper import DeepAvitoScraper
 
 
 def main():
     server_url = 'http://db-api-service:8080'
-    server_url = 'http://192.168.100.53:30058/db'
+    # server_url = 'http://192.168.100.53:30058/db'
     connected = False
     while not connected:
         try:
@@ -30,9 +30,9 @@ def main():
     website_name = os.environ.get('WEBSITE_NAME')
     type = os.environ.get('TYPE')
     mode = os.environ.get('MODE')
-    website_name='avito'
-    type='sale'
-    mode = 'deep'
+    # website_name='avito'
+    # type='sale'
+    # mode = 'deep'
 
     # if is_exist(website_name, type):
     #     return

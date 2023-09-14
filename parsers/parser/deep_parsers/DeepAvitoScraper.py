@@ -3,10 +3,10 @@ import os
 import re
 
 from lxml import html
-from parsers.KeysEnum import KeysEnum
-from parsers.abstract.Scraper import Scraper
-# from KeysEnum import KeysEnum
-# from abstract.Scraper import Scraper
+# from parsers.KeysEnum import KeysEnum
+# from parsers.abstract.Scraper import Scraper
+from KeysEnum import KeysEnum
+from abstract.Scraper import Scraper
 
 
 class DeepAvitoScraper(Scraper):

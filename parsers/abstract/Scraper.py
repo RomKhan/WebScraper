@@ -7,8 +7,8 @@ import time
 import re
 from lxml import html
 
-# from abstract.ScraperAbstract import ScraperAbstract
-from parsers.abstract.ScraperAbstract import ScraperAbstract
+from abstract.ScraperAbstract import ScraperAbstract
+# from parsers.abstract.ScraperAbstract import ScraperAbstract
 
 url_queue = []
 
