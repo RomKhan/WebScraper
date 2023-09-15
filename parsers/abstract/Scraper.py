@@ -41,7 +41,7 @@ class Scraper(ScraperAbstract):
             url = self.get_desk_link()
             page_source, self.status = self.get_page(url, pod, key)
 
-            if self.status:
+            if self.status and page_source:
                 links = self.get_offer_links(page_source)
                 idx = set(links.keys())
                 if len(links) == 0:
