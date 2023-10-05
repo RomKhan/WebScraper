@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import time
@@ -120,6 +121,7 @@ class ImageLoader:
 
 
     def load_images_to_disk(self):
+        count = 0
         while True:
             if self.is_downloading_current_state:
                 time.sleep(5)
@@ -127,11 +129,17 @@ class ImageLoader:
             if len(self.image_queue) > 0:
                 data = self.image_queue.pop(0)
                 platform_name, offer_id, images_url, i = data['website_name'], data['id'], data['url'], data['index']
+                if os.path.exists(f"{self.storage_folder}/{platform_name}/{offer_id}"):
+                    continue
                 try:
                     self.disk.upload_url(images_url[i], f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg', n_retries=5, retry_interval=1)
+                    count += 1
                 except:
                     time.sleep(5)
                     self.image_queue.append(data)
                     continue
             else:
                 time.sleep(2)
+            if count >= 100:
+                logging.info(f'Количество фоток в очереди: {len(self.image_queue)}')
+                count = 0

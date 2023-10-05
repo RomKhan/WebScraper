@@ -11,11 +11,13 @@ from shallow_parsers.ShallowDomclickScraper import ShallowDomclickScraper
 from shallow_parsers.ShallowYandexScraper import ShallowYandexScraper
 from deep_parsers.DeepCianScraper import DeepCianScraper
 from deep_parsers.DeepAvitoScraper import DeepAvitoScraper
+from deep_parsers.DeepDomclickScraper import DeepDomclickScraper
+from deep_parsers.DeepYandexScraper import DeepYandexScraper
 
 
 def main():
     server_url = 'http://db-api-service:8080'
-    # server_url = 'http://192.168.100.53:30058/db'
+    # server_url = 'http://192.168.100.53:30802/db'
     connected = False
     while not connected:
         try:
@@ -30,12 +32,9 @@ def main():
     website_name = os.environ.get('WEBSITE_NAME')
     type = os.environ.get('TYPE')
     mode = os.environ.get('MODE')
-    # website_name='avito'
+    # website_name='cian'
     # type='sale'
     # mode = 'deep'
-
-    # if is_exist(website_name, type):
-    #     return
 
     if mode == 'shallow':
         if website_name == 'cian':
@@ -50,11 +49,11 @@ def main():
         if website_name == 'cian':
             deep_parser(DeepCianScraper, website_name, type)
         elif website_name == 'domclick':
-            deep_parser(ShallowDomclickScraper, website_name, type)
+            deep_parser(DeepDomclickScraper, website_name, type)
         elif website_name == 'avito':
             deep_parser(DeepAvitoScraper, website_name, type)
         elif website_name == 'yandex':
-            deep_parser(ShallowYandexScraper, website_name, type)
+            deep_parser(DeepYandexScraper, website_name, type)
 
 
 

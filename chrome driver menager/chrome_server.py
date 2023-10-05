@@ -50,7 +50,7 @@ options.add_argument('--disable-dev-shm-usage')
 # options.add_argument("--disable-images")
 options.add_argument('--disable-infobars')
 options.add_argument(f"--user-agent={random.choice(useragents)}")
-options.add_argument('--blink-settings=imagesEnabled=false')
+# options.add_argument('--blink-settings=imagesEnabled=false')
 # options.add_argument('--proxy-server=http://91.238.211.110:8080')
 # options.add_argument('--disable-features=VizDisplayCompositor')
 # options.add_argument("--incognito")
@@ -216,9 +216,9 @@ async def handle_request(request_json: dict):
 
     global websites
     if website not in websites:
-        HTTPException(status_code=404, detail="not reserved")
+        raise HTTPException(status_code=404, detail="not reserved")
     if websites[website][2] != key:
-        HTTPException(status_code=404, detail="wrong pod key")
+        raise HTTPException(status_code=404, detail="wrong pod key")
 
     page_source = ''
     global shutdown_flag
@@ -243,3 +243,7 @@ async def handle_request(request_json: dict):
 #         port = int(os.environ['PORT'])
 #
 #     app.run(host=host, port=port)
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="localhost", port=8082)

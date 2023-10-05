@@ -30,6 +30,7 @@ class DataWorker:
             'Тип перекрытий',
             'Дом',
             'Название ЖК',
+            'Количество квартир'
         ]
         self.listings_static_keys = [
             KeysEnum.LISTING_ID.value,
@@ -53,6 +54,11 @@ class DataWorker:
             'Мебель',
             'Техника',
             'Теплый пол',
+            'Лет в собственности',
+            'Количество собственников',
+            'Несовершеннолетние собственники',
+            'Прописанные несовершеннолетние',
+            'Перепланировка',
             KeysEnum.APPEARING_DATE.value,
             KeysEnum.DESAPEAR_DATE.value,
             'Тип комнат'
@@ -280,7 +286,8 @@ class DataWorker:
                 KeysEnum.YARD_DATA.value,
                 KeysEnum.FLOORING_TYPE.value,
                 KeysEnum.HOUSE_STATUS.value,
-                KeysEnum.RESIDENTIAL_COMPLEX_NAME.value
+                KeysEnum.RESIDENTIAL_COMPLEX_NAME.value,
+                KeysEnum.APARTMENTS_NUMBER.value
                 ]
         for offer in data:
             records.append((offer[KeysEnum.ADDRESS_ID.value],
@@ -299,7 +306,8 @@ class DataWorker:
                             offer['Двор'],
                             offer['Тип перекрытий'],
                             offer['Дом'],
-                            offer['Название ЖК']
+                            offer['Название ЖК'],
+                            offer['Количество квартир']
                             ))
         history_keys = [KeysEnum.ADDRESS_ID.value, KeysEnum.END_BUILD_YEAR.value, KeysEnum.HOUSE_STATUS.value, KeysEnum.IS_DERELICTED.value]
         await self.update_or_past(keys, records, KeysEnum.ADDRESS_ID.value, 'House', history_keys)
@@ -327,6 +335,11 @@ class DataWorker:
                 KeysEnum.FURNITURE.value,
                 KeysEnum.TECHNIQUE.value,
                 KeysEnum.HEATED_FLOORS.value,
+                KeysEnum.YEARS_OWNED.value,
+                KeysEnum.OWNERS_COUNT.value,
+                KeysEnum.MINOR_OWNERS.value,
+                KeysEnum.REGISTERED_MINORS.value,
+                KeysEnum.REDEVELOPMENT.value,
                 KeysEnum.DESAPEAR_DATE.value,
                 KeysEnum.ROOMS_TYPE.value
                 ]
@@ -352,6 +365,11 @@ class DataWorker:
                             offer['Мебель'],
                             offer['Техника'],
                             offer['Теплый пол'],
+                            offer['Лет в собственности'],
+                            offer['Количество собственников'],
+                            offer['Несовершеннолетние собственники'],
+                            offer['Прописанные несовершеннолетние'],
+                            offer['Перепланировка'],
                             offer[KeysEnum.DESAPEAR_DATE.value],
                             offer['Тип комнат']
                             ))
@@ -494,6 +512,8 @@ class DataWorker:
         data['Балкон'] = DataWorker.type_convert_if_possible(data, 'Балкон', int)
         data['Пассажирский лифт'] = DataWorker.type_convert_if_possible(data, 'Пассажирский лифт', int)
         data['Грузовой лифт'] = DataWorker.type_convert_if_possible(data, 'Грузовой лифт', int)
+        data['Количество собственников'] = DataWorker.type_convert_if_possible(data, 'Количество собственников', int)
+        data['Количество квартир'] = DataWorker.type_convert_if_possible(data, 'Количество квартир', int)
 
     async def save_to_db(self, data):
         offers_with_sellers = []

@@ -12,8 +12,8 @@ class ScraperAbstract:
         self.max_page = max_page
         self.db_flow_url = 'http://db-api-service:8080/db'
         self.chrome_service = 'http://api-getaway-service:8083'
-        # self.db_flow_url = 'http://192.168.100.53:30058/db'
-        # self.chrome_service = 'http://192.168.100.53:32389'
+        # self.db_flow_url = 'http://192.168.100.53:30802/db'
+        # self.chrome_service = 'http://192.168.100.53:31281'
         self.website_name = website_name
         self.listing_type = listing_type
         self.city = city
@@ -74,7 +74,7 @@ class ScraperAbstract:
 
         try:
             request_text = requests.post(self.db_flow_url+'/saveListing', json={'offers': offers}).text
-            inserted_rows = int(request_text)
+            inserted_rows = int(request_text.strip('"'))
         except:
             inserted_rows = -1
         return inserted_rows

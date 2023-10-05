@@ -22,7 +22,7 @@ class DeepCianScraper(Scraper):
                          offers_xpath='//article[@data-name="CardComponent"]',
                          max_page=54)
 
-    def parse_offer_page(self, content, link, id):
+    def parse_offer_page(self, content, link, id, images=None):
         try:
             tree = html.fromstring(content)
             price, conditions, is_mortgage_available = self.parse_aside_main_info(tree)

@@ -13,7 +13,7 @@ from abstract.ScraperAbstract import ScraperAbstract
 url_queue = []
 
 class Scraper(ScraperAbstract):
-    def __init__(self, url_components, link_token, website_name, city, listing_type, offers_xpath, max_page, prev_address = None):
+    def __init__(self, url_components, link_token, website_name, city, listing_type, offers_xpath, max_page, prev_address = None, is_shallow_images=False):
         ScraperAbstract.__init__(self, website_name, city, listing_type, max_page)
         self.url_components = url_components
         self.link_token = link_token
@@ -24,6 +24,7 @@ class Scraper(ScraperAbstract):
         self.parsed_count = 0
         self.offers_xpath = offers_xpath
         self.last_idx = []
+        self.is_shallow_images = is_shallow_images
 
     def run(self):
         start_page_number = 3
@@ -69,23 +70,29 @@ class Scraper(ScraperAbstract):
                 self.last_idx.pop(0)
             self.previous_idx = set([x for idx in self.last_idx for x in idx])
 
-    def get_offer_data(self, url, id, attempts, pod, key):
+    def get_offer_data(self, url, id, images, attempts, pod, key):
         page_source, self.status = self.get_page(url, pod, key)
         if self.status:
-            is_parsed = self.parse_offer_page(page_source, url, id)
+            is_parsed = self.parse_offer_page(page_source, url, id, images)
             if not is_parsed:
-                url_queue.append([self, url, id, attempts + 1])
+                url_queue.append([self, url, id, images, attempts + 1])
         else:
-            url_queue.append([self, url, id, attempts + 1])
+            url_queue.append([self, url, id, images, attempts + 1])
 
     @staticmethod
     def get_offers_data():
+        count = 0
         while True:
+            if count >= 100:
+                logging.info(f'Количество обьявлений в очереди: {len(url_queue)}')
+                count = 0
+            else:
+                count += 1
             if len(url_queue) > 0:
-                parser, url, id, attempts = url_queue.pop(0)
+                parser, url, id, images, attempts = url_queue.pop(0)
                 pod = parser.reserve_pods(count=1)[0]
                 if attempts < 5:
-                    thread = threading.Thread(target=parser.get_offer_data, args=(url, id, attempts, pod[0], pod[1]))
+                    thread = threading.Thread(target=parser.get_offer_data, args=(url, id, images, attempts, pod[0], pod[1]))
                     thread.start()
                 if len(parser.offers) > 50:
                     offers = parser.offers
@@ -103,13 +110,17 @@ class Scraper(ScraperAbstract):
         offers = tree.xpath(self.offers_xpath)
         for offer in offers:
             try:
+                images = None
                 link, id = self.get_link(offer)
-            except:
+                if self.is_shallow_images:
+                    images = self.get_images(offer)
+            except Exception as e:
+                logging.info(f'Can\'t parse offer due this error: {e}')
                 continue
             if self.prev_address is not None:
-                links[id] = (self, self.prev_address + link, id, 0)
+                links[id] = (self, self.prev_address + link, id, images, 0)
             else:
-                links[id] = (self, link, id, 0)
+                links[id] = (self, link, id, images, 0)
         return links
         # links = {}
         # soup = BeautifulSoup(content, parse_only=SoupStrainer('a'), features="html.parser")
@@ -126,5 +137,8 @@ class Scraper(ScraperAbstract):
     def get_link(self, offer):
         pass
 
-    def parse_offer_page(self, content, link, id):
+    def get_images(self, offer):
+        pass
+
+    def parse_offer_page(self, content, link, id, images=None):
         pass

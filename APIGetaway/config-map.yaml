@@ -45,5 +45,13 @@ data:
       "avito_sale_Москва": "15,https://www.avito.ru/moskva/kvartiry/prodam?bt=1&p=1&s=104",
       "avito_sale_Санкт-Петербург": "30,https://www.avito.ru/sankt-peterburg/kvartiry/prodam?bt=1&p=1&s=104",
       "avito_sale_Екатеринбург": "60,https://www.avito.ru/ekaterinburg/kvartiry/prodam?bt=1&p=1&s=104",
-      "avito_sale": "/kvartiry/"
+      "avito_sale": "/kvartiry/",
+      "domclick_sale_Москва": "10,https://domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sort=updated&sort_dir=desc&offset=1960",
+      "domclick_sale_Санкт-Петербург": "20,https://spb.domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sort=updated&sort_dir=desc&offset=20",
+      "domclick_sale_Екатеринбург": "40,https://ekaterinburg.domclick.ru/search?deal_type=sale&category=living&offer_type=flat&offer_type=layout&sort=updated&sort_dir=desc&offset=20",
+      "domclick_sale": "",
+      "yandex_sale_Москва": "10,https://realty.ya.ru/moskva/kupit/kvartira/?showSimilar=NO&sort=DATE_DESC&page=24",
+      "yandex_sale_Санкт-Петербург": "20,https://realty.ya.ru/sankt-peterburg/kupit/kvartira/?showSimilar=NO&sort=DATE_DESC&page=24",
+      "yandex_sale_Екатеринбург": "40,https://realty.ya.ru/ekaterinburg/kupit/kvartira/?showSimilar=NO&sort=DATE_DESC&page=24",
+      "yandex_sale": ""
     }

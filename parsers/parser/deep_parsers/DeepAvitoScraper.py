@@ -21,21 +21,22 @@ class DeepAvitoScraper(Scraper):
                          max_page=100,
                          prev_address='https://www.avito.ru')
 
-    def parse_offer_page(self, content, link, id):
+    def parse_offer_page(self, content, link, id, images=None):
         try:
             content = html.fromstring(content)
             address = f'{self.city}, ' + content.xpath('.//div[@itemprop="address"]/span/text()')[0]
             rooms_count, property_type, total_square, flat_flour, max_flours = self.parse_title(content)
             price = content.xpath('.//span[@itemprop="price"]')[0].get('content')
-            description_block = content.xpath('.//div[@itemprop="description"]//p/text()')
+            description_block = content.xpath('.//div[@itemprop="description"]//text()')
             if len(description_block) == 0:
-                description_block = content.xpath('.//div[@itemprop="description"]/text()')
+                description_block = None
             description = '\n'.join(description_block).replace('\'', '"')
             images = content.xpath('.//meta[@property="og:image"]')
             for i in range(len(images)):
                 images[i] = images[i].get('content')
         except Exception as e:
-            logging.info(f'Критическая ошибка: {e}, Обьявление: {link}')
+            if str(e) != 'Document is empty':
+                logging.info(f'Критическая ошибка: {e}, Обьявление: {link}')
             return False
 
         kitchen_area = None
@@ -92,7 +93,7 @@ class DeepAvitoScraper(Scraper):
                     renovation = value
                 elif name == 'Способ продажи':
                     conditions = value
-                elif name == 'Вид сделки' and value == 'возможна ипотека':
+                elif name == 'Вид сделки' and 'возможна ипотека' in value:
                     is_mortgage_available = True
                 elif name == 'Балкон или лоджия':
                     types = value.split()
@@ -111,7 +112,8 @@ class DeepAvitoScraper(Scraper):
                     heated_floors = value
                 elif name == 'Отделка':
                     decoration_finishing_type = value
-                elif name != 'Количество комнат' and name != 'Общая площадь' and name != 'Этаж' and name != 'Дополнительно':
+                elif name != 'Количество комнат' and name != 'Общая площадь' and name != 'Этаж' and name != 'Дополнительно' \
+                        and not (name == 'Вид сделки' and ('аукцион' in value or 'продажа доли' in value)):
                     logging.warning(f'НОВЫЙ ТАГ КВАРТИРЫ - {name}:{value}, ссылка: {link}')
 
             house_params_list = content.xpath(".//ul[starts-with(@class, 'style-item-params-list')]/li")
@@ -193,14 +195,15 @@ class DeepAvitoScraper(Scraper):
                       'Год постройки': end_build_year,
                       'Тип дома': house_type,
                       'Отделка': decoration_finishing_type,
-                      'Аварийность': is_derelicted
+                      'Аварийность': is_derelicted,
+                      'Путь к картинкам': f'{self.website_name}{os.sep}{id}' if len(images) > 0 else None
                       }
         self.offers.append(offer_data)
         self.save_images(id, images)
         return True
 
     def parse_title(self, offer):
-        title = offer.xpath('.//span[@class="title-info-title-text"]/text()')[0].split(',')
+        title = offer.xpath('.//h1[@itemprop="name"]/text()')[0].split(',')
         if len(title) == 4:
             temp = title.pop(1)
             title[1] = ','.join([temp, title[1]])

@@ -68,6 +68,24 @@ spec:
               value: sale
             - name: MODE
               value: deep
+        - name: deep-sale-parser-domclick
+          image: stikeyrs/scraper:parser
+          env:
+            - name: WEBSITE_NAME
+              value: domclick
+            - name: TYPE
+              value: sale
+            - name: MODE
+              value: deep
+        - name: deep-sale-parser-yandex
+          image: stikeyrs/scraper:parser
+          env:
+            - name: WEBSITE_NAME
+              value: yandex
+            - name: TYPE
+              value: sale
+            - name: MODE
+              value: deep
 #      restartPolicy: OnFailure  # Политика перезапуска контейнера
       imagePullSecrets:
         - name: docker-registry-secret
