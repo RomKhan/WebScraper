@@ -164,6 +164,8 @@ class DeepDomclickScraper(Scraper):
                     flooring_type = value
                 elif name == 'Мусоропровод':
                     is_chute = value
+                elif name == 'Газ':
+                    is_chute = value
                 elif name == 'Серия дома':
                     house_serie = value
                 elif name == 'Горячее водоснабжение':
