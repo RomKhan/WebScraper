@@ -57,6 +57,7 @@ class ImageLoader:
                 self.wait_till_progress(self.disk.rename, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
             except:
                 self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
+                return
 
             with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
                 zObject.extractall(path=f'{self.disk_folder_name}_0')
