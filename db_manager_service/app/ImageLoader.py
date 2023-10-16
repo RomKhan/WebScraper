@@ -39,13 +39,18 @@ class ImageLoader:
         while operation.get_status() == 'in-progress':
             time.sleep(0.5)
 
-
     def download_current_state(self):
         if not self.is_downloading_current_state:
             self.is_downloading_current_state = True
         else:
             return
         time.sleep(1)
+
+        if not self.disk.exists(self.disk_folder_name):
+            self.disk.mkdir(self.disk_folder_name)
+            self.is_downloading_current_state = False
+            return
+
         if self.disk.exists(f'{self.disk_folder_name}_0'):
             self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
             try:

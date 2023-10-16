@@ -52,8 +52,9 @@ class Scraper(ScraperAbstract):
                 current_idx |= idx
                 idx = idx - self.previous_idx
                 for id in idx:
-                    url_queue.append(links[id])
-                    offers_count += 1
+                    if links[id] not in url_queue:
+                        url_queue.append(links[id])
+                        offers_count += 1
                 self.current_page += 1
                 if len(idx) != len(set(links.keys())):
                     break
