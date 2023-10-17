@@ -47,9 +47,12 @@ class ImageLoader:
         time.sleep(1)
 
         if os.path.exists(f'{self.disk_folder_name}_0.zip'):
-            with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
-                zObject.extractall(path=f'{self.disk_folder_name}_0')
-            files = os.listdir(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
+            try:
+                with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
+                    zObject.extractall(path=f'{self.disk_folder_name}_0')
+                files = os.listdir(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
+            except:
+                os.remove(f'{self.disk_folder_name}_0.zip')
 
             for file in files:
                 try:
