@@ -46,19 +46,7 @@ class ImageLoader:
             return
         time.sleep(1)
 
-        if not self.disk.exists(self.disk_folder_name):
-            self.disk.mkdir(self.disk_folder_name)
-            self.is_downloading_current_state = False
-            return
-
-        if self.disk.exists(f'{self.disk_folder_name}_0'):
-            self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
-            try:
-                self.wait_till_progress(self.disk.rename, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
-            except:
-                self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
-                return
-
+        if os.path.exists(f'{self.disk_folder_name}_0.zip'):
             with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
                 zObject.extractall(path=f'{self.disk_folder_name}_0')
             files = os.listdir(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
@@ -77,12 +65,22 @@ class ImageLoader:
 
             shutil.rmtree(f"{self.disk_folder_name}_0")
             os.remove(f'{self.disk_folder_name}_0.zip')
-            self.wait_till_progress(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
-            self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
-        else:
-            self.wait_till_progress(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
 
-        self.disk.mkdir(self.disk_folder_name)
+        try:
+            if self.disk.exists(f'{self.disk_folder_name}_0'):
+                self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
+                self.wait_till_progress(self.disk.rename, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
+                self.wait_till_progress(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
+                self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
+            else:
+                self.wait_till_progress(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
+
+            self.disk.mkdir(self.disk_folder_name)
+        except:
+            if not self.disk.exists(self.disk_folder_name):
+                self.disk.mkdir(self.disk_folder_name)
+            if self.disk.exists(f'{self.disk_folder_name}_1'):
+                self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
         self.is_downloading_current_state = False
 
     def transform_images(self, data):
