@@ -47,6 +47,7 @@ class ImageLoader:
         time.sleep(1)
 
         if os.path.exists(f'{self.disk_folder_name}_0.zip'):
+            files = None
             try:
                 with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
                     zObject.extractall(path=f'{self.disk_folder_name}_0')
@@ -54,20 +55,21 @@ class ImageLoader:
             except:
                 os.remove(f'{self.disk_folder_name}_0.zip')
 
-            for file in files:
-                try:
-                    shutil.move(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
-                                f'{self.disk_folder_name}{os.sep}{file}')
-                    name_parts = file.split('_')
-                    platform_name = name_parts[0]
-                    offer_id = name_parts[1]
-                    i = int(name_parts[2].split('.')[0])
-                    self.transform_images((platform_name, i, offer_id))
-                except:
-                    continue
+            if files is not None:
+                for file in files:
+                    try:
+                        shutil.move(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
+                                    f'{self.disk_folder_name}{os.sep}{file}')
+                        name_parts = file.split('_')
+                        platform_name = name_parts[0]
+                        offer_id = name_parts[1]
+                        i = int(name_parts[2].split('.')[0])
+                        self.transform_images((platform_name, i, offer_id))
+                    except:
+                        continue
 
-            shutil.rmtree(f"{self.disk_folder_name}_0")
-            os.remove(f'{self.disk_folder_name}_0.zip')
+                shutil.rmtree(f"{self.disk_folder_name}_0")
+                os.remove(f'{self.disk_folder_name}_0.zip')
 
         try:
             if self.disk.exists(f'{self.disk_folder_name}_0'):
