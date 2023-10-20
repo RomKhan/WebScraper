@@ -82,10 +82,13 @@ class ImageLoader:
 
             self.disk.mkdir(self.disk_folder_name)
         except:
-            if not self.disk.exists(self.disk_folder_name):
-                self.disk.mkdir(self.disk_folder_name)
-            if self.disk.exists(f'{self.disk_folder_name}_1'):
-                self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
+            try:
+                if not self.disk.exists(self.disk_folder_name):
+                    self.disk.mkdir(self.disk_folder_name)
+                if self.disk.exists(f'{self.disk_folder_name}_1'):
+                    self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
+            except:
+                self.is_downloading_current_state = False
         self.is_downloading_current_state = False
 
     def transform_images(self, data):
