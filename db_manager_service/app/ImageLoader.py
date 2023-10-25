@@ -40,7 +40,6 @@ class ImageLoader:
             time.sleep(0.5)
 
     def download_current_state(self):
-        return
         if not self.is_downloading_current_state:
             self.is_downloading_current_state = True
         else:
