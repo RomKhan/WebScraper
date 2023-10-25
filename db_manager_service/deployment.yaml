@@ -27,6 +27,11 @@ spec:
               mountPath: /var/lib/postgresql/data
         - name: db-api
           image: stikeyrs/scraper:db-api
+          resources:
+            requests:
+              memory: "100Mi"
+            limits:
+              memory: "500Mi"
           volumeMounts:
             - name: images-storage
               mountPath: /app/images

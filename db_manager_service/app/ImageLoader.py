@@ -40,26 +40,27 @@ class ImageLoader:
             time.sleep(0.5)
 
     def download_current_state(self):
+        return
         if not self.is_downloading_current_state:
             self.is_downloading_current_state = True
         else:
             return
         time.sleep(1)
 
-        if os.path.exists(f'{self.disk_folder_name}_0.zip'):
+        if os.path.exists(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip'):
             files = None
             try:
-                with ZipFile(f'{self.disk_folder_name}_0.zip', 'r') as zObject:
-                    zObject.extractall(path=f'{self.disk_folder_name}_0')
-                files = os.listdir(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
+                with ZipFile(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip', 'r') as zObject:
+                    zObject.extractall(path=f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0')
+                files = os.listdir(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0')
             except:
-                os.remove(f'{self.disk_folder_name}_0.zip')
+                os.remove(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip')
 
             if files is not None:
                 for file in files:
                     try:
-                        shutil.move(f'{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
-                                    f'{self.disk_folder_name}{os.sep}{file}')
+                        shutil.move(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
+                                    f'{self.storage_folder}{os.sep}{self.disk_folder_name}{os.sep}{file}')
                         name_parts = file.split('_')
                         platform_name = name_parts[0]
                         offer_id = name_parts[1]
@@ -73,7 +74,7 @@ class ImageLoader:
 
         try:
             if self.disk.exists(f'{self.disk_folder_name}_0'):
-                self.disk.download(f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_0.zip')
+                self.disk.download(f'{self.disk_folder_name}_0', f'{self.storage_folder}/{self.disk_folder_name}_0.zip')
                 self.wait_till_progress(self.disk.rename, f'{self.disk_folder_name}_0', f'{self.disk_folder_name}_1')
                 self.wait_till_progress(self.disk.rename, self.disk_folder_name, f'{self.disk_folder_name}_0')
                 self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
@@ -100,14 +101,14 @@ class ImageLoader:
             os.mkdir(f'{self.storage_folder}/{platform_name}/{offer_id}')
 
         try:
-            img = cv2.imread(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+            img = cv2.imread(f'{self.storage_folder}{os.sep}{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
             if platform_name == 'avito':
                 img = self.cut_image(img)
             resize_img = cv2.resize(img, (256, 256))
             cv2.imwrite(f'{self.storage_folder}/{platform_name}/{offer_id}/image_{i}.jpg', resize_img)
-            os.remove(f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+            os.remove(f'{self.storage_folder}{os.sep}{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
         except Exception as e:
-            print(e, f'{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
+            print(e, f'{self.storage_folder}{os.sep}{self.disk_folder_name}/{platform_name}_{offer_id}_{i}.jpg')
 
     def cut_image(self, image):
         hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
