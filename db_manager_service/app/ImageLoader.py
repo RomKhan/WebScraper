@@ -68,8 +68,8 @@ class ImageLoader:
                     except:
                         continue
 
-                shutil.rmtree(f"{self.disk_folder_name}_0")
-                os.remove(f'{self.disk_folder_name}_0.zip')
+                shutil.rmtree(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0")
+                os.remove(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip')
 
         try:
             if self.disk.exists(f'{self.disk_folder_name}_0'):
