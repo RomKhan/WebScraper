@@ -36,9 +36,12 @@ class DeepCianScraper(Scraper):
             else:
                 image_path = f'{self.website_name}{os.sep}{id}'
                 self.save_images(id, image_urls)
-            offer_data = {KeysEnum.LISTING_ID.value: id,
+            offer_data = {}
+            offer_data.update(object_data_dict)
+            offer_data.update(add_dict_info)
+            offer_data.update({KeysEnum.LISTING_ID.value: id,
                           KeysEnum.PRICE.value: price,
-                          'Условия cделки': conditions,
+                          'Условия сделки': conditions,
                           'Ипотека': is_mortgage_available,
                           'Число комнат': rooms_count,
                           'Тип жилья': house_type,
@@ -48,9 +51,7 @@ class DeepCianScraper(Scraper):
                           'Описание': description,
                           'Ссылка': link,
                           'Путь к картинкам': image_path
-                          }
-            offer_data.update(object_data_dict)
-            offer_data.update(add_dict_info)
+                          })
             #offer_data.update(house_info_dict)
             self.offers.append(offer_data)
             return True
