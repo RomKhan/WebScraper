@@ -15,15 +15,15 @@ class ImageLoader:
         self.storage_folder = 'images'
         self.image_queue = []
 
-        if os.path.exists(f"{self.disk_folder_name}"):
-            shutil.rmtree(f"{self.disk_folder_name}")
-        if os.path.exists(f"{self.disk_folder_name}_0"):
-            shutil.rmtree(f"{self.disk_folder_name}_0")
-        if os.path.exists(f"{self.disk_folder_name}_1"):
-            shutil.rmtree(f"{self.disk_folder_name}_1")
-        if os.path.exists(f"{self.disk_folder_name}_0.zip"):
-            os.remove(f"{self.disk_folder_name}_0.zip")
-        os.mkdir(f'{self.disk_folder_name}')
+        if os.path.exists(f"{self.storage_folder}{os.sep}{self.disk_folder_name}"):
+            shutil.rmtree(f"{self.storage_folder}{os.sep}{self.disk_folder_name}")
+        if os.path.exists(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0"):
+            shutil.rmtree(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0")
+        if os.path.exists(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_1"):
+            shutil.rmtree(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_1")
+        if os.path.exists(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip"):
+            os.remove(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip")
+        os.mkdir(f'{self.storage_folder}{os.sep}{self.disk_folder_name}')
 
         if self.disk.exists(self.disk_folder_name):
             self.wait_till_progress(self.disk.remove, self.disk_folder_name)
@@ -57,16 +57,17 @@ class ImageLoader:
 
             if files is not None:
                 for file in files:
+                    shutil.move(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
+                                f'{self.storage_folder}{os.sep}{self.disk_folder_name}{os.sep}{file}')
+                    name_parts = file.split('_')
+                    platform_name = name_parts[0]
+                    offer_id = name_parts[1]
+                    i = int(name_parts[2].split('.')[0])
                     try:
-                        shutil.move(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
-                                    f'{self.storage_folder}{os.sep}{self.disk_folder_name}{os.sep}{file}')
-                        name_parts = file.split('_')
-                        platform_name = name_parts[0]
-                        offer_id = name_parts[1]
-                        i = int(name_parts[2].split('.')[0])
                         self.transform_images((platform_name, i, offer_id))
                     except:
                         continue
+
 
                 shutil.rmtree(f"{self.storage_folder}{os.sep}{self.disk_folder_name}_0")
                 os.remove(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip')
