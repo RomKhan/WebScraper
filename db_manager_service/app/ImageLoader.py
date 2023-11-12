@@ -59,11 +59,11 @@ class ImageLoader:
                 for file in files:
                     shutil.move(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0{os.sep}{self.disk_folder_name}_0{os.sep}{file}',
                                 f'{self.storage_folder}{os.sep}{self.disk_folder_name}{os.sep}{file}')
-                    name_parts = file.split('_')
-                    platform_name = name_parts[0]
-                    offer_id = name_parts[1]
-                    i = int(name_parts[2].split('.')[0])
                     try:
+                        name_parts = file.split('_')
+                        platform_name = name_parts[0]
+                        offer_id = name_parts[1]
+                        i = int(name_parts[2].split('.')[0])
                         self.transform_images((platform_name, i, offer_id))
                     except:
                         continue
