@@ -29,7 +29,7 @@ address_save_thread.start()
 images_save_thread = threading.Thread(target=get_image_loader().load_images_to_disk)
 images_save_thread.start()
 scheduler = BackgroundScheduler()
-scheduler.add_job(get_image_loader().download_current_state, trigger=IntervalTrigger(seconds=60))
+scheduler.add_job(get_image_loader().download_current_state, trigger=IntervalTrigger(seconds=40))
 scheduler.start()
 atexit.register(teardown_db)
 
