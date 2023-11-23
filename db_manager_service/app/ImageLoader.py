@@ -47,6 +47,17 @@ class ImageLoader:
         time.sleep(1)
 
         if os.path.exists(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip'):
+            file_size = os.path.getsize(f'{self.storage_folder}/{self.disk_folder_name}_0.zip')
+            if file_size == 0:
+                try:
+                    self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}', permanently=True)
+                    self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_0', permanently=True)
+                    self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
+                except:
+                    pass
+                self.is_downloading_current_state = False
+                return
+
             files = None
             try:
                 with ZipFile(f'{self.storage_folder}{os.sep}{self.disk_folder_name}_0.zip', 'r') as zObject:
@@ -90,6 +101,7 @@ class ImageLoader:
                     self.wait_till_progress(self.disk.remove, f'{self.disk_folder_name}_1', permanently=True)
             except:
                 self.is_downloading_current_state = False
+
         self.is_downloading_current_state = False
 
     def transform_images(self, data):
