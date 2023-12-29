@@ -44,8 +44,8 @@ spec:
             initialDelaySeconds: 120  # Задержка перед первой проверкой (в секундах)
             periodSeconds: 120  # Периодичность проверок "живости" (в секундах)
             failureThreshold: 5  # Количество неудачных проверок перед перезапуском
-      imagePullSecrets:
-        - name: docker-registry-secret
+#      imagePullSecrets:
+#        - name: docker-registry-secret
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
