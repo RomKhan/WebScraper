@@ -17,7 +17,7 @@ from deep_parsers.DeepYandexScraper import DeepYandexScraper
 
 def main():
     server_url = 'http://db-api-service:8080'
-    # server_url = 'http://localhost:30524/db'
+    # server_url = 'http://localhost:30731/db'
     connected = False
     while not connected:
         try:

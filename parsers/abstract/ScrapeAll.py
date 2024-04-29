@@ -121,7 +121,6 @@ class ScrapeAll(ScraperAbstract):
                 print(e, link)
 
         self.count_of_parsed += len(offers) - corrupt_offers
-        # threading.Thread(self.to_database, args=(offers_dict)).start()
         if len(offers_dict) > 0:
             saved_count = self.to_database(offers_dict)
             if saved_count == 0 and len(offers) - corrupt_offers > 0:

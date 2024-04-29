@@ -12,18 +12,18 @@ RUN apt-get update -qqy \
 
 #... (install dependencies)
 
-COPY ./parser/start.py /app/
-COPY ./parser/utils.py /app/
-COPY ./parser/shallow_parsers /app/shallow_parsers/
-COPY ./parser/deep_parsers /app/deep_parsers/
+COPY ./parsers/parser/start.py /app/
+COPY ./parsers/parser/utils.py /app/
+COPY ./parsers/parser/shallow_parsers /app/shallow_parsers/
+COPY ./parsers/parser/deep_parsers /app/deep_parsers/
 
-COPY ./parser/requirements.txt /app/
+COPY ./parsers/parser/requirements.txt /app/
 RUN pip install -r /app/requirements.txt
 
-COPY ./abstract /app/abstract/
+COPY ./parsers/abstract /app/abstract/
 RUN pip install -r app//abstract/requirements.txt
 
-COPY ./KeysEnum.py /app
+COPY ./parsers/KeysEnum.py /app
 
 # Create the necessary directories for copying the binary
 RUN mkdir -p /var/chromedriver/

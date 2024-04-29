@@ -7,7 +7,7 @@ data:
   cities: "Москва,Санкт-Петербург,Екатеринбург"
   cian_cooldown: "10"
   domclick_cooldown: "8"
-  avito_cooldown: "10"
+  avito_cooldown: "12"
   yandex_cooldown: "8"
   shallow_url_dict: | 
     {

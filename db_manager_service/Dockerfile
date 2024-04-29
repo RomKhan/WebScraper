@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev
 
     # Установка зависимостей
-COPY ./requirements.txt /requirements.txt
+COPY ./db_manager_service/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
 # Копирование исходного кода
-COPY ./app /app
+COPY ./db_manager_service/app /app
 #COPY ./KeysEnum.py /app
 
 # Запуск приложения Flask

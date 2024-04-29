@@ -35,7 +35,6 @@ class AddressManager:
             dadata = Dadata(token, secret)
             sug_count = dadata.get_daily_stats()['services']['suggestions']
             self.free_dadata[token] = [dadata, sug_count]
-            # self.tokens_time_to_update[token] = time.time()
 
     def check_for_update(self):
         for token in self.free_dadata:
@@ -43,8 +42,6 @@ class AddressManager:
                 self.free_dadata[token][1] = self.free_dadata[token][0].get_daily_stats()['services']['suggestions']
             except:
                 continue
-            # if time.time() - self.free_dadata[token][2] > 86400:
-            #     self.free_dadata[token] = [Dadata(token), 0, time.time()]
 
     def get_address_via_yandex(self, address):
         cookies = {
@@ -112,8 +109,6 @@ class AddressManager:
                 if self.free_dadata[token][1] < 10000:
                     dadata = self.free_dadata[token][0]
                     self.free_dadata[token][1] += 1
-                # if self.free_dadata[token][1] == 10000:
-                #     self.free_dadata.pop(0)
             if dadata is None:
                 self.check_for_update()
                 logging.info(f'в очереди: {self.address_queue.size}')
@@ -121,7 +116,6 @@ class AddressManager:
                 continue
 
             offer = self.address_queue.get()
-            # t1 = time.time()
             if offer['Адресс'] in self.address_history:
                 lon, lat, full_address = self.address_history[offer['Адресс']]
             else:
@@ -139,7 +133,6 @@ class AddressManager:
             if len(self.address_history) > 200:
                 first_key = next(iter(self.address_history))
                 self.address_history.pop(first_key)
-            # print(time.time() - t1, lon, lat, full_address, offer['listing_id'])
 
 
 

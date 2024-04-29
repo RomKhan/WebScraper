@@ -37,7 +37,7 @@ class DeepDomclickScraper(Scraper):
             residential_complex_name_block = self.parse_if_exists(side_card, './/a[@class="offerShortSummary_complexLink"]/text()')
             if residential_complex_name_block is not None:
                 residential_complex_name = residential_complex_name_block[0]
-            images_inside = main_block.xpath('.//div[starts-with(@class, "dc-gallery__slot")]//img')
+            images_inside = main_block.xpath('.//div[starts-with(@class, "picture-picture")]//img')
             if images is None:
                 images = []
             for i in range(len(images_inside)):

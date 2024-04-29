@@ -40,7 +40,6 @@ async def get_db_connect():
         db_user = config.DB_USER
         db_password = config.DB_PASSWORD
 
-        # dsn = f"dbname={db_name} user={db_user} password={db_password} host={db_host} port={db_port}"
         dsn = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
         pool = await asyncpg.create_pool(dsn)
         if db_conn is None:

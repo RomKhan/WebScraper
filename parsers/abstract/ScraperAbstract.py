@@ -12,8 +12,8 @@ class ScraperAbstract:
         self.max_page = max_page
         self.db_flow_url = 'http://db-api-service:8080/db'
         self.chrome_service = 'http://api-getaway-service:8083'
-        # self.db_flow_url = 'http://localhost:30524/db'
-        # self.chrome_service = 'http://localhost:31848'
+        # self.db_flow_url = 'http://localhost:30006/db'
+        # self.chrome_service = 'http://localhost:30731'
         self.website_name = website_name
         self.listing_type = listing_type
         self.city = city

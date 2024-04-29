@@ -2,11 +2,11 @@
 FROM python:3.9
 
 # Установка зависимостей
-COPY ./requirements.txt /requirements.txt
+COPY ./APIGetaway/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
 # Копирование исходного кода
-COPY ./APIGetaway.py /app/APIGetaway.py
+COPY ./APIGetaway/APIGetaway.py /app/APIGetaway.py
 
 ENV FLASK_APP=APIGetaway.py
 

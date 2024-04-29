@@ -93,7 +93,6 @@ class DataWorker:
         self.not_changed_keys = ['appearing_date']
         self.async_pull = async_pull
         self.address_manager = address_manager
-        # self.sync_db_conn = sync_db_conn
         self.address_pull = []
         self.lock = False
 

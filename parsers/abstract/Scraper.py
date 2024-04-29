@@ -1,10 +1,7 @@
 import logging
-import random
 import threading
 
-from bs4 import BeautifulSoup, SoupStrainer
 import time
-import re
 from lxml import html
 
 from abstract.ScraperAbstract import ScraperAbstract
@@ -123,17 +120,6 @@ class Scraper(ScraperAbstract):
             else:
                 links[id] = (self, link, id, images, 0)
         return links
-        # links = {}
-        # soup = BeautifulSoup(content, parse_only=SoupStrainer('a'), features="html.parser")
-        # for link in soup:
-        #     if link.has_attr('href') and self.link_token in link['href']:
-        #         id = list(filter(None, re.split('_|/', link['href'])))[-1]
-        #         if re.match('^[0-9]{5,}', id):
-        #             if self.prev_address is not None:
-        #                 links[id] = (self.prev_address + link['href'], id, 0)
-        #             else:
-        #                 links[id] = (link['href'], id, 0)
-        # return links
 
     def get_link(self, offer):
         pass
